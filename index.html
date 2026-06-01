@@ -18,7 +18,7 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;overscroll-behavior:none}
-  body{padding-bottom:96px;max-width:520px;margin:0 auto;min-height:100vh}
+  body{padding-bottom:170px;max-width:520px;margin:0 auto;min-height:100vh}
   h1,h2,h3,.num{font-family:'Bricolage Grotesque',sans-serif}
   .num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
   button{font-family:inherit;cursor:pointer;border:none;color:inherit;background:none}
@@ -29,10 +29,10 @@
   .hidden{display:none!important}
 
   /* header */
-  header{padding:22px 20px 8px;display:flex;align-items:center;justify-content:space-between}
+  header{position:sticky;top:0;z-index:50;background:rgba(10,11,13,.92);backdrop-filter:blur(14px);padding:22px 20px 8px;display:flex;align-items:center;justify-content:space-between}
   header h1{font-size:26px;font-weight:800;letter-spacing:-.03em}
   header h1 span{color:var(--ember)}
-  .datewrap{display:flex;align-items:center;justify-content:center;gap:18px;padding:4px 20px 16px}
+  .datewrap{position:sticky;top:62px;z-index:49;background:rgba(10,11,13,.92);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;gap:18px;padding:8px 20px 14px}
   .datewrap button{width:34px;height:34px;border-radius:50%;background:var(--surface);color:var(--muted);font-size:18px;display:grid;place-items:center}
   .datewrap .d{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px;min-width:150px;text-align:center}
 
