@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Macro Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0b0d; --surface:#141619; --surface2:#1c1f24; --line:#262a30;
+    --text:#f2f4f7; --muted:#8a909b; --faint:#5a606b;
+    --ember:#ff6b35; --teal:#2dd4bf; --blue:#3b82f6; --red:#ef4444; --amber:#f5b942;
+    --r:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;overscroll-behavior:none}
+  body{padding-bottom:96px;max-width:520px;margin:0 auto;min-height:100vh}
+  h1,h2,h3,.num{font-family:'Bricolage Grotesque',sans-serif}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  button{font-family:inherit;cursor:pointer;border:none;color:inherit;background:none}
+  input,textarea{font-family:inherit;color:var(--text);background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:100%;font-size:15px;outline:none}
+  input:focus,textarea:focus{border-color:var(--teal)}
+  select{font-family:inherit;color:var(--text);background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:100%;font-size:15px;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238a909b' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+  select:focus{border-color:var(--teal)}
+  .hidden{display:none!important}
+
+  /* header */
+  header{padding:22px 20px 8px;display:flex;align-items:center;justify-content:space-between}
+  header h1{font-size:26px;font-weight:800;letter-spacing:-.03em}
+  header h1 span{color:var(--ember)}
+  .datewrap{display:flex;align-items:center;justify-content:center;gap:18px;padding:4px 20px 16px}
+  .datewrap button{width:34px;height:34px;border-radius:50%;background:var(--surface);color:var(--muted);font-size:18px;display:grid;place-items:center}
+  .datewrap .d{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px;min-width:150px;text-align:center}
+
+  .wrap{padding:0 16px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
+
+  /* ring */
+  .ringcard{display:flex;flex-direction:column;align-items:center;padding-top:24px;padding-bottom:22px}
+  .ring{position:relative;width:200px;height:200px}
+  .ring svg{transform:rotate(-90deg)}
+  .ringctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .ringctr .big{font-size:46px;font-weight:800;line-height:1}
+  .ringctr .lbl{color:var(--muted);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+  .ringctr .sub{font-size:13px;color:var(--faint);margin-top:4px}
+  .ringctr .sub b{color:var(--teal)}
+  .ringctr .over b{color:var(--red)}
+
+  .statsrow{display:flex;gap:10px;margin-top:18px;width:100%}
+  .stat{flex:1;background:var(--surface2);border-radius:14px;padding:12px 8px;text-align:center}
+  .stat .v{font-family:'Bricolage Grotesque';font-weight:700;font-size:19px}
+  .stat .k{color:var(--muted);font-size:11px;margin-top:2px;letter-spacing:.03em}
+  .stat.protein .v{color:var(--teal)}
+  .stat.carb .v{color:var(--blue)}
+  .stat.fat .v{color:var(--amber)}
+
+  /* protein bar */
+  .pbar{margin-top:16px;width:100%}
+  .pbar .top{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:7px}
+  .pbar .track{height:9px;background:var(--surface2);border-radius:99px;overflow:hidden}
+  .pbar .fill{height:100%;background:var(--teal);border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+
+  /* food list */
+  .seclabel{display:flex;align-items:center;justify-content:space-between;padding:6px 4px 12px}
+  .seclabel h3{font-size:15px;font-weight:700;letter-spacing:-.01em}
+  .seclabel .cnt{color:var(--faint);font-size:13px}
+  .food{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .food:last-child{border-bottom:none}
+  .food .nm{flex:1;min-width:0}
+  .food .nm .n{font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .food .nm .m{font-size:12px;color:var(--muted);margin-top:2px}
+  .food .cal{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px}
+  .food .cal s{font-size:11px;color:var(--faint);font-weight:400;text-decoration:none;margin-left:1px}
+  .food .del{color:var(--faint);font-size:20px;padding:4px 6px;margin-right:-6px}
+  .empty{text-align:center;color:var(--faint);padding:30px 10px;font-size:14px}
+
+  /* add bar */
+  .addbar{position:fixed;bottom:78px;left:0;right:0;max-width:520px;margin:0 auto;padding:0 16px;z-index:40}
+  .addinner{display:flex;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  .addinner input{background:transparent;border:none;padding:10px 8px}
+  .addinner input:focus{border:none}
+  .iconbtn{width:44px;height:44px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;flex-shrink:0;font-size:19px}
+  .iconbtn.go{background:var(--ember);color:#0a0b0d}
+  .iconbtn:active{transform:scale(.92)}
+
+  /* nav */
+  nav{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:rgba(10,11,13,.9);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;padding:10px 0 max(10px,env(safe-area-inset-bottom))}
+  nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--faint);font-size:10.5px;letter-spacing:.02em}
+  nav button .ic{font-size:21px}
+  nav button.on{color:var(--text)}
+  nav button.on .ic{filter:drop-shadow(0 0 10px var(--ember))}
+
+  /* trends */
+  .chartcard h3{font-size:14px;color:var(--muted);font-weight:600;margin-bottom:4px}
+  .chartcard .hero{font-family:'Bricolage Grotesque';font-weight:800;font-size:34px;display:flex;align-items:baseline;gap:8px}
+  .chartcard .hero s{font-size:14px;font-weight:600;text-decoration:none}
+  .up{color:var(--red)} .down{color:var(--teal)}
+  svg.line{width:100%;height:150px;margin-top:10px;overflow:visible}
+  .minirow{display:flex;gap:10px;margin-top:14px}
+  .mini{flex:1;background:var(--surface2);border-radius:12px;padding:12px;text-align:center}
+  .mini .v{font-family:'Bricolage Grotesque';font-weight:700;font-size:18px}
+  .mini .k{font-size:11px;color:var(--muted);margin-top:2px}
+
+  .barchart{display:flex;align-items:flex-end;gap:6px;height:130px;margin-top:14px;padding:0 2px}
+  .barchart .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .barchart .bar{width:100%;max-width:26px;border-radius:6px 6px 3px 3px;min-height:3px;transition:height .4s}
+  .barchart .bl{font-size:10px;color:var(--faint)}
+
+  /* settings + import */
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:7px;font-weight:500}
+  .field .hint{font-size:11.5px;color:var(--faint);margin-top:6px;line-height:1.5}
+  .btn{display:block;width:100%;background:var(--teal);color:#06201d;font-weight:600;padding:14px;border-radius:13px;font-size:15px;margin-top:6px}
+  .btn.sec{background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+  .btn:active{transform:scale(.98)}
+  .twocol{display:flex;gap:12px}
+  .twocol .field{flex:1}
+  .uploadzone{border:1.5px dashed var(--line);border-radius:16px;padding:26px 18px;text-align:center;color:var(--muted);font-size:14px;margin-bottom:14px}
+  .uploadzone .ic{font-size:32px;display:block;margin-bottom:8px}
+  .uploadzone:active{border-color:var(--teal)}
+  .pageh{padding:6px 4px 14px}
+  .pageh h2{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .pageh p{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.5}
+
+  /* toast / loader */
+  #toast{position:fixed;bottom:150px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--line);color:var(--text);padding:12px 18px;border-radius:99px;font-size:13.5px;opacity:0;transition:.3s;z-index:99;max-width:90%;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.err{border-color:var(--red);color:#ffb4b4}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.25);border-top-color:var(--ember);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .banner{background:linear-gradient(135deg,rgba(255,107,53,.14),rgba(45,212,191,.1));border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px}
+  .banner b{color:var(--text)}
+
+  /* run toggle */
+  .runrow{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;transition:.3s}
+  .runrow.on{border-color:var(--ember);background:linear-gradient(135deg,rgba(255,107,53,.12),var(--surface))}
+  .runrow .l{display:flex;align-items:center;gap:11px}
+  .runrow .l .ic{font-size:20px}
+  .runrow .l .t{font-size:14.5px;font-weight:600}
+  .runrow .l .s{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .runrow.on .l .s{color:var(--ember)}
+  .toggle{width:50px;height:29px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);position:relative;flex-shrink:0;transition:.25s}
+  .toggle::after{content:'';position:absolute;top:2px;left:2px;width:23px;height:23px;border-radius:50%;background:var(--faint);transition:.25s cubic-bezier(.4,1.3,.5,1)}
+  .runrow.on .toggle{background:var(--ember);border-color:var(--ember)}
+  .runrow.on .toggle::after{left:23px;background:#0a0b0d}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Macro<span>Lab</span></h1>
+  <button class="iconbtn" id="quickSettings" style="background:var(--surface)">⚙</button>
+</header>
+
+<!-- ============ TODAY ============ -->
+<section id="page-today">
+  <div class="datewrap">
+    <button id="prevDay">‹</button>
+    <div class="d" id="dayLabel">Today</div>
+    <button id="nextDay">›</button>
+  </div>
+  <div class="wrap">
+    <div class="runrow" id="runRow">
+      <div class="l"><span class="ic">🏃</span><div><div class="t">Run day</div><div class="s" id="runSub">Flat target</div></div></div>
+      <div class="toggle"></div>
+    </div>
+    <div class="card ringcard">
+      <div class="ring">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="88" fill="none" stroke="var(--surface2)" stroke-width="14"/>
+          <circle id="ringFill" cx="100" cy="100" r="88" fill="none" stroke="var(--ember)" stroke-width="14"
+                  stroke-linecap="round" stroke-dasharray="552.9" stroke-dashoffset="552.9"/>
+        </svg>
+        <div class="ringctr">
+          <div class="big num" id="calNum">0</div>
+          <div class="lbl">of <span id="calTarget">1850</span> kcal</div>
+          <div class="sub" id="calSub"><b>1850</b> left</div>
+        </div>
+      </div>
+
+      <div class="statsrow">
+        <div class="stat protein"><div class="v num" id="pVal">0g</div><div class="k">Protein</div></div>
+        <div class="stat carb"><div class="v num" id="cVal">0g</div><div class="k">Carbs</div></div>
+        <div class="stat fat"><div class="v num" id="fVal">0g</div><div class="k">Fat</div></div>
+      </div>
+
+      <div class="pbar">
+        <div class="top"><span>Protein goal</span><span id="pGoalTxt">0 / 117g</span></div>
+        <div class="track"><div class="fill" id="pFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="seclabel"><h3>Logged food</h3><span class="cnt" id="foodCnt">0 items</span></div>
+      <div id="foodList"><div class="empty">No food logged yet.<br>Add something below 👇</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRENDS ============ -->
+<section id="page-trends" class="hidden">
+  <div class="wrap" style="padding-top:8px">
+    <div class="pageh"><h2>Trends</h2><p>Your weight trend is the real referee — judge progress over 2–3 weeks, not single days.</p></div>
+
+    <div class="card chartcard">
+      <h3>WEIGHT</h3>
+      <div class="hero"><span class="num" id="wNow">—</span><s id="wDelta"></s></div>
+      <svg class="line" id="wChart" viewBox="0 0 320 150" preserveAspectRatio="none"></svg>
+      <div class="minirow">
+        <div class="mini"><div class="v num" id="wHigh">—</div><div class="k">Highest</div></div>
+        <div class="mini"><div class="v num" id="wLow">—</div><div class="k">Lowest</div></div>
+        <div class="mini"><div class="v num" id="wRate">—</div><div class="k">Weekly rate</div></div>
+      </div>
+    </div>
+
+    <div class="card chartcard">
+      <h3>CALORIES — LAST 7 DAYS</h3>
+      <div class="barchart" id="calBars"></div>
+      <div class="minirow">
+        <div class="mini"><div class="v num" id="avgIn">—</div><div class="k">Avg intake</div></div>
+        <div class="mini"><div class="v num" id="tdeeMini">—</div><div class="k">TDEE</div></div>
+        <div class="mini"><div class="v num" id="avgDef">—</div><div class="k">Avg deficit</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ IMPORT ============ -->
+<section id="page-import" class="hidden">
+  <div class="wrap" style="padding-top:8px">
+    <div class="pageh"><h2>Import screenshots</h2><p>Let Claude read your Garmin & RENPHO screens so you don't type numbers.</p></div>
+
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:4px">🔥 Garmin — TDEE</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">Upload the "Calories Burned" screen (7d view works best — it reads Avg Total).</p>
+      <label class="uploadzone" id="garminZone">
+        <span class="ic">📊</span>Tap to upload Garmin screenshot
+        <input type="file" accept="image/*" class="hidden" id="garminFile">
+      </label>
+      <div id="garminResult"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:4px">⚖️ RENPHO — Weight</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">Upload your weight trend screen — Claude logs today's weight.</p>
+      <label class="uploadzone" id="renphoZone">
+        <span class="ic">📈</span>Tap to upload RENPHO screenshot
+        <input type="file" accept="image/*" class="hidden" id="renphoFile">
+      </label>
+      <div id="renphoResult"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section id="page-settings" class="hidden">
+  <div class="wrap" style="padding-top:8px">
+    <div class="pageh"><h2>Settings</h2></div>
+
+    <div class="banner">
+      <b>How this works:</b> the app calls the Claude API with <b>your own key</b>, stored only on this device. Hosting is free; the API costs roughly a few cents per day at your usage. Get a key at <b>console.anthropic.com</b>.
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label>Anthropic API key</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-...">
+        <div class="hint">Stored in your browser only (localStorage). Never commit this into the hosted file.</div>
+      </div>
+      <div class="field">
+        <label>Model</label>
+        <select id="model">
+          <option value="claude-haiku-4-5-20251001">Haiku 4.5 — cheapest, fast (default)</option>
+          <option value="claude-sonnet-4-6">Sonnet 4.6 — sharper vision/photos</option>
+          <option value="claude-opus-4-7">Opus 4.7 — most accurate, priciest</option>
+          <option value="claude-opus-4-8">Opus 4.8 — newest flagship</option>
+        </select>
+        <div class="hint">Haiku handles typed food & clean screenshots cheaply. Bump to Sonnet if a food photo gets misjudged. Strings verified current as of May 2026 — check docs.claude.com if one ever errors.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="twocol">
+        <div class="field"><label>Calorie target</label><input type="number" id="calGoal" inputmode="numeric"></div>
+        <div class="field"><label>Protein target (g)</label><input type="number" id="proGoal" inputmode="numeric"></div>
+      </div>
+      <div class="field"><label>TDEE (kcal burned/day)</label><input type="number" id="tdeeInput" inputmode="numeric">
+        <div class="hint">Set from your Garmin weekly average, or let the Import tab fill it.</div>
+      </div>
+      <div class="field"><label>Run-day calorie bump (+kcal)</label><input type="number" id="runBumpInput" inputmode="numeric">
+        <div class="hint">Extra calories added to your target when "Run day" is toggled on — tops up glycogen for Mon/Wed/Sat/Sun sessions without you eating back the full burn.</div>
+      </div>
+      <button class="btn" id="saveSettings">Save settings</button>
+    </div>
+
+    <div class="card">
+      <button class="btn sec" id="exportData">⬇ Export all data (JSON backup)</button>
+      <div style="height:10px"></div>
+      <button class="btn sec" id="wipeData" style="color:var(--red)">Reset all data</button>
+    </div>
+    <div style="text-align:center;color:var(--faint);font-size:11px;padding:8px 0 20px">MacroLab · runs entirely on your device</div>
+  </div>
+</section>
+
+<!-- add bar (today only) -->
+<div class="addbar" id="addBar">
+  <div class="addinner">
+    <input type="text" id="foodInput" placeholder="e.g. 150g lemongrass chicken + 200g rice" enterkeyhint="done">
+    <button class="iconbtn" id="photoBtn" title="Photo">📷</button>
+    <button class="iconbtn go" id="addBtn">→</button>
+    <input type="file" accept="image/*" class="hidden" id="foodPhoto">
+  </div>
+</div>
+
+<nav>
+  <button data-pg="today" class="on"><span class="ic">◎</span>Today</button>
+  <button data-pg="trends"><span class="ic">📈</span>Trends</button>
+  <button data-pg="import"><span class="ic">⬆</span>Import</button>
+  <button data-pg="settings"><span class="ic">⚙</span>Settings</button>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+/* ---------------- storage ---------------- */
+const K='macrolab_v1';
+const def={apiKey:'',model:'claude-haiku-4-5-20251001',calGoal:1850,proGoal:117,tdee:2360,runBump:250,days:{},weights:[]};
+let S=load();
+function load(){try{return Object.assign({},def,JSON.parse(localStorage.getItem(K)||'{}'))}catch(e){return Object.assign({},def)}}
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('Storage blocked — host the file to enable saving',1)}}
+
+/* ---------------- date helpers ---------------- */
+let viewDate=new Date();
+const iso=d=>d.toISOString().slice(0,10);
+function dayLabel(d){const t=new Date();t.setHours(0,0,0,0);const x=new Date(d);x.setHours(0,0,0,0);
+  const diff=Math.round((t-x)/864e5);
+  if(diff===0)return'Today';if(diff===1)return'Yesterday';
+  return x.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});}
+function getDay(d){const k=iso(d);if(!S.days[k])S.days[k]={foods:[]};return S.days[k]}
+
+/* ---------------- toast ---------------- */
+let tt;
+function toast(msg,err){const el=document.getElementById('toast');el.innerHTML=msg;el.className='show'+(err?' err':'');clearTimeout(tt);tt=setTimeout(()=>el.className='',err?3800:2400)}
+function loading(msg){const el=document.getElementById('toast');el.innerHTML='<span class="spin"></span>'+msg;el.className='show'}
+
+/* ---------------- Claude API ---------------- */
+async function callClaude(content,sys){
+  if(!S.apiKey){toast('Add your API key in Settings first',1);throw new Error('no key')}
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'content-type':'application/json','x-api-key':S.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:S.model||def.model,max_tokens:400,system:sys,messages:[{role:'user',content}]})
+  });
+  if(!res.ok){const t=await res.text();throw new Error('API '+res.status+': '+t.slice(0,120))}
+  const data=await res.json();
+  return data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+}
+function parseJSON(txt){const c=txt.replace(/```json|```/g,'').trim();const m=c.match(/\{[\s\S]*\}/);return JSON.parse(m?m[0]:c)}
+function fileToB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file)})}
+
+const FOOD_SYS='You are a precise nutrition estimator. The user gives a food description or a photo of a meal. Reply with ONLY a JSON object, no markdown, no prose: {"name":string (short, max 6 words),"calories":number,"protein":number,"carbs":number,"fat":number}. Estimate realistic values for the portion shown or described. Numbers are grams except calories (kcal). If portions are unstated, assume one normal serving.';
+
+async function analyzeFoodText(text){
+  loading('Estimating macros…');
+  const out=await callClaude([{type:'text',text}],FOOD_SYS);
+  return parseJSON(out);
+}
+async function analyzeFoodPhoto(file){
+  loading('Reading your meal…');
+  const b64=await fileToB64(file);
+  const out=await callClaude([
+    {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},
+    {type:'text',text:'Estimate the nutrition of this meal.'}
+  ],FOOD_SYS);
+  return parseJSON(out);
+}
+async function readGarmin(file){
+  loading('Reading Garmin…');
+  const b64=await fileToB64(file);
+  const out=await callClaude([
+    {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},
+    {type:'text',text:'This is a Garmin "Calories Burned" screen. Return ONLY JSON {"tdee":number} using the Avg Total if a weekly view, otherwise the Total number.'}
+  ],'Return only JSON, no prose.');
+  return parseJSON(out);
+}
+async function readRenpho(file){
+  loading('Reading weight…');
+  const b64=await fileToB64(file);
+  const out=await callClaude([
+    {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},
+    {type:'text',text:'This is a weight tracker screenshot. Return ONLY JSON {"weight":number} in kg — the most recent / headline weight value.'}
+  ],'Return only JSON, no prose.');
+  return parseJSON(out);
+}
+
+/* ---------------- render today ---------------- */
+const RC=2*Math.PI*88;
+function renderToday(){
+  document.getElementById('dayLabel').textContent=dayLabel(viewDate);
+  const day=getDay(viewDate);
+  const isRun=!!day.run;
+  const goal=S.calGoal+(isRun?S.runBump:0);
+
+  const rr=document.getElementById('runRow');
+  rr.classList.toggle('on',isRun);
+  document.getElementById('runSub').textContent=isRun?('+'+S.runBump+' kcal · '+goal+' target'):'Flat target · tap for run day';
+
+  let cal=0,p=0,c=0,f=0;
+  day.foods.forEach(x=>{cal+=x.calories||0;p+=x.protein||0;c+=x.carbs||0;f+=x.fat||0});
+  cal=Math.round(cal);p=Math.round(p);c=Math.round(c);f=Math.round(f);
+
+  document.getElementById('calNum').textContent=cal;
+  document.getElementById('calTarget').textContent=goal;
+  const left=goal-cal;
+  const subEl=document.getElementById('calSub');
+  if(left>=0){subEl.className='sub';subEl.innerHTML='<b>'+left+'</b> left'}
+  else{subEl.className='sub over';subEl.innerHTML='<b>'+Math.abs(left)+'</b> over'}
+
+  const pct=Math.min(cal/goal,1);
+  const ring=document.getElementById('ringFill');
+  ring.style.strokeDashoffset=RC*(1-pct);
+  ring.setAttribute('stroke',cal>goal?'var(--red)':'var(--ember)');
+
+  document.getElementById('pVal').textContent=p+'g';
+  document.getElementById('cVal').textContent=c+'g';
+  document.getElementById('fVal').textContent=f+'g';
+  document.getElementById('pGoalTxt').textContent=p+' / '+S.proGoal+'g';
+  document.getElementById('pFill').style.width=Math.min(p/S.proGoal*100,100)+'%';
+
+  const list=document.getElementById('foodList');
+  document.getElementById('foodCnt').textContent=day.foods.length+(day.foods.length===1?' item':' items');
+  if(!day.foods.length){list.innerHTML='<div class="empty">No food logged yet.<br>Add something below 👇</div>';return}
+  list.innerHTML=day.foods.map((x,i)=>`
+    <div class="food">
+      <div class="nm"><div class="n">${esc(x.name)}</div>
+        <div class="m">P ${Math.round(x.protein)} · C ${Math.round(x.carbs)} · F ${Math.round(x.fat)}</div></div>
+      <div class="cal num">${Math.round(x.calories)}<s>cal</s></div>
+      <button class="del" data-i="${i}">×</button>
+    </div>`).join('');
+  list.querySelectorAll('.del').forEach(b=>b.onclick=()=>{day.foods.splice(+b.dataset.i,1);save();renderToday();renderTrends()});
+}
+function esc(s){return(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+
+/* ---------------- render trends ---------------- */
+function renderTrends(){
+  // weight
+  const w=[...S.weights].sort((a,b)=>a.date<b.date?-1:1);
+  const chart=document.getElementById('wChart');
+  if(w.length){
+    const now=w[w.length-1].kg;
+    document.getElementById('wNow').textContent=now.toFixed(2)+'kg';
+    const first=w[0].kg,delta=now-first;
+    const de=document.getElementById('wDelta');
+    de.textContent=(delta>=0?'+':'')+delta.toFixed(2)+'kg';
+    de.className=delta>0?'up':'down';
+    const vals=w.map(x=>x.kg),mn=Math.min(...vals),mx=Math.max(...vals),rng=(mx-mn)||1;
+    document.getElementById('wHigh').textContent=mx.toFixed(2);
+    document.getElementById('wLow').textContent=mn.toFixed(2);
+    // weekly rate
+    const days=(new Date(w[w.length-1].date)-new Date(w[0].date))/864e5||1;
+    const rate=delta/days*7;
+    document.getElementById('wRate').textContent=(rate>=0?'+':'')+rate.toFixed(2)+'kg';
+    // path
+    const W=320,H=150,pad=14;
+    const pts=w.map((x,i)=>{
+      const px=w.length===1?W/2:pad+i/(w.length-1)*(W-2*pad);
+      const py=pad+(1-(x.kg-mn)/rng)*(H-2*pad);
+      return[px,py];
+    });
+    const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+    const area=d+` L${pts[pts.length-1][0].toFixed(1)} ${H} L${pts[0][0].toFixed(1)} ${H} Z`;
+    chart.innerHTML=`
+      <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="var(--teal)" stop-opacity=".35"/>
+        <stop offset="1" stop-color="var(--teal)" stop-opacity="0"/></linearGradient></defs>
+      <path d="${area}" fill="url(#wg)"/>
+      <path d="${d}" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="var(--bg)" stroke="var(--teal)" stroke-width="2"/>`).join('')}`;
+  }else{
+    document.getElementById('wNow').textContent='—';
+    document.getElementById('wDelta').textContent='';
+    chart.innerHTML='<text x="160" y="78" fill="var(--faint)" font-size="12" text-anchor="middle" font-family="Sora">Log weight via the Import tab</text>';
+    ['wHigh','wLow','wRate'].forEach(id=>document.getElementById(id).textContent='—');
+  }
+
+  // calories last 7d
+  const bars=document.getElementById('calBars');
+  const today=new Date();today.setHours(0,0,0,0);
+  let days=[],tot=0,n=0;
+  for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const k=iso(d);
+    const dayObj=S.days[k]||{};
+    const fs=dayObj.foods||[];
+    const cal=Math.round(fs.reduce((a,x)=>a+(x.calories||0),0));
+    const goal=S.calGoal+(dayObj.run?S.runBump:0);
+    days.push({d,cal,goal});if(cal>0){tot+=cal;n++}}
+  const mx=Math.max(S.calGoal+S.runBump,...days.map(x=>x.cal))*1.1||1;
+  bars.innerHTML=days.map(x=>{
+    const h=x.cal/mx*100;
+    const col=x.cal===0?'var(--surface2)':(x.cal>x.goal?'var(--red)':'var(--ember)');
+    return `<div class="col"><div class="bar" style="height:${Math.max(h,2)}%;background:${col}"></div>
+      <div class="bl">${x.d.toLocaleDateString('en-AU',{weekday:'narrow'})}</div></div>`}).join('');
+  const avg=n?Math.round(tot/n):0;
+  document.getElementById('avgIn').textContent=avg||'—';
+  document.getElementById('tdeeMini').textContent=S.tdee;
+  document.getElementById('avgDef').textContent=avg?((S.tdee-avg>=0?'-':'+')+Math.abs(S.tdee-avg)):'—';
+}
+
+/* ---------------- settings ---------------- */
+function fillSettings(){
+  document.getElementById('apiKey').value=S.apiKey;
+  const ms=document.getElementById('model');ms.value=S.model;
+  if(ms.selectedIndex<0)ms.value=def.model;
+  document.getElementById('calGoal').value=S.calGoal;
+  document.getElementById('proGoal').value=S.proGoal;
+  document.getElementById('tdeeInput').value=S.tdee;
+  document.getElementById('runBumpInput').value=S.runBump;
+}
+document.getElementById('saveSettings').onclick=()=>{
+  S.apiKey=document.getElementById('apiKey').value.trim();
+  S.model=document.getElementById('model').value.trim()||def.model;
+  S.calGoal=+document.getElementById('calGoal').value||1850;
+  S.proGoal=+document.getElementById('proGoal').value||117;
+  S.tdee=+document.getElementById('tdeeInput').value||2360;
+  S.runBump=+document.getElementById('runBumpInput').value||250;
+  save();renderToday();renderTrends();toast('Saved ✓');
+};
+document.getElementById('exportData').onclick=()=>{
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='macrolab-backup.json';a.click();
+};
+document.getElementById('wipeData').onclick=()=>{if(confirm('Erase all logged food, weights and settings?')){S=Object.assign({},def);save();fillSettings();renderToday();renderTrends();toast('Reset done')}};
+document.getElementById('quickSettings').onclick=()=>nav('settings');
+
+/* ---------------- food add ---------------- */
+async function addFood(){
+  const inp=document.getElementById('foodInput');const t=inp.value.trim();if(!t)return;
+  inp.value='';inp.blur();
+  try{const r=await analyzeFoodText(t);getDay(viewDate).foods.push(r);save();renderToday();renderTrends();toast('Added '+Math.round(r.calories)+' cal ✓')}
+  catch(e){toast(e.message.includes('API')?e.message:'Couldn’t estimate that — try again',1)}
+}
+document.getElementById('addBtn').onclick=addFood;
+document.getElementById('foodInput').addEventListener('keydown',e=>{if(e.key==='Enter')addFood()});
+document.getElementById('photoBtn').onclick=()=>document.getElementById('foodPhoto').click();
+document.getElementById('foodPhoto').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  try{const r=await analyzeFoodPhoto(f);getDay(viewDate).foods.push(r);save();renderToday();renderTrends();toast('Added '+esc(r.name)+' ✓')}
+  catch(err){toast(err.message.includes('API')?err.message:'Couldn’t read that photo',1)}
+};
+
+/* ---------------- import ---------------- */
+document.getElementById('garminZone').onclick=()=>document.getElementById('garminFile').click();
+document.getElementById('garminFile').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  try{const r=await readGarmin(f);S.tdee=Math.round(r.tdee);save();
+    document.getElementById('garminResult').innerHTML='<div class="mini" style="margin-top:6px"><div class="v num">'+S.tdee+'</div><div class="k">TDEE updated ✓</div></div>';
+    renderTrends();toast('TDEE set to '+S.tdee+' ✓')}
+  catch(err){toast(err.message.includes('API')?err.message:'Couldn’t read that screen',1)}
+};
+document.getElementById('renphoZone').onclick=()=>document.getElementById('renphoFile').click();
+document.getElementById('renphoFile').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  try{const r=await readRenpho(f);const kg=+(+r.weight).toFixed(2);const today=iso(new Date());
+    S.weights=S.weights.filter(w=>w.date!==today);S.weights.push({date:today,kg});save();
+    document.getElementById('renphoResult').innerHTML='<div class="mini" style="margin-top:6px"><div class="v num">'+kg+'kg</div><div class="k">Logged today ✓</div></div>';
+    renderTrends();toast('Weight logged: '+kg+'kg ✓')}
+  catch(err){toast(err.message.includes('API')?err.message:'Couldn’t read that screen',1)}
+};
+
+/* ---------------- nav ---------------- */
+function nav(pg){
+  ['today','trends','import','settings'].forEach(p=>document.getElementById('page-'+p).classList.toggle('hidden',p!==pg));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.pg===pg));
+  document.getElementById('addBar').classList.toggle('hidden',pg!=='today');
+  if(pg==='trends')renderTrends();if(pg==='settings')fillSettings();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>nav(b.dataset.pg));
+document.getElementById('prevDay').onclick=()=>{viewDate.setDate(viewDate.getDate()-1);renderToday()};
+document.getElementById('nextDay').onclick=()=>{viewDate.setDate(viewDate.getDate()+1);renderToday()};
+document.getElementById('runRow').onclick=()=>{const d=getDay(viewDate);d.run=!d.run;save();renderToday();renderTrends();toast(d.run?'Run day on · +'+S.runBump+' kcal':'Run day off')};
+
+/* ---------------- init ---------------- */
+renderToday();renderTrends();
+if(!S.apiKey)setTimeout(()=>toast('Tap ⚙ to add your API key & get started'),600);
+</script>
+</body>
+</html>
