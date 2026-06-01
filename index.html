@@ -386,9 +386,15 @@ async function readGarmin(file){
   const b64=await fileToB64(file);
   const out=await callClaude([
     {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},
-    {type:'text',text:'This is a Garmin "Calories Burned" screen. Return ONLY JSON {"tdee":number} using the Avg Total if a weekly view, otherwise the Total number.'}
-  ],'Return only JSON, no prose.');
-  return parseJSON(out);
+    {type:'text',text:'This is a Garmin "Calories Burned" screen. Find the daily total calories burned (TDEE). If it is a 7-day/weekly view, use the "Avg Total" number (active + resting averaged). If it is a single-day view, use the big "Total" number in the centre ring. Ignore "Avg Active" and "Avg Resting" alone. Return ONLY JSON {"tdee":number} as a plain integer.'}
+  ],'Return only JSON, no prose. tdee must be a plain integer (kcal).');
+  const o=parseJSON(out);
+  // accept the value under any sensible key the model might use
+  if(o.tdee===undefined){
+    const cand=o.avg_total??o.avgTotal??o.total??o.avgtotal??o.calories??o.value;
+    if(cand!==undefined)o.tdee=cand;
+  }
+  return o;
 }
 async function readRenpho(file){
   loading('Reading weight…');
@@ -397,7 +403,12 @@ async function readRenpho(file){
     {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},
     {type:'text',text:'This is a weight tracker screenshot (e.g. RENPHO), often a trend chart with several daily weight points and summary stats like Highest/Lowest. Identify the MOST RECENT individual weight reading — the rightmost/latest data point on the chart, NOT the Highest, Lowest, or average summary boxes. Return ONLY JSON {"weight":number} in kg.'}
   ],'Return only JSON, no prose. weight must be a plain number in kg.');
-  return parseJSON(out);
+  const o=parseJSON(out);
+  if(o.weight===undefined){
+    const cand=o.kg??o.value??o.latest??o.current??o.mostRecent;
+    if(cand!==undefined)o.weight=cand;
+  }
+  return o;
 }
 
 /* ---------------- render today ---------------- */
