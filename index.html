@@ -299,6 +299,11 @@
     <div class="card">
       <button class="btn sec" id="exportData">⬇ Export all data (JSON backup)</button>
       <div style="height:10px"></div>
+      <label class="btn sec" id="importBtn" for="importFile" style="display:block;text-align:center">⬆ Import / restore from backup
+        <input type="file" accept="application/json,.json" id="importFile" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden">
+      </label>
+      <div class="hint" style="margin-top:8px">Export regularly — your data lives only on this device and iOS can clear it (e.g. if you delete the home-screen icon). A saved JSON file is your safety net. Import merges a backup back in.</div>
+      <div style="height:14px"></div>
       <button class="btn sec" id="wipeData" style="color:var(--red)">Reset all data</button>
     </div>
     <div style="text-align:center;color:var(--faint);font-size:11px;padding:8px 0 20px">MacroLab · runs entirely on your device</div>
@@ -560,10 +565,37 @@ document.getElementById('saveSettings').onclick=()=>{
   save();renderToday();renderTrends();toast('Saved ✓');
 };
 document.getElementById('exportData').onclick=()=>{
+  const stamp=iso(new Date());
   const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='macrolab-backup.json';a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='macrolab-backup-'+stamp+'.json';a.click();
+  toast('Backup downloaded ✓');
 };
-document.getElementById('wipeData').onclick=()=>{if(confirm('Erase all logged food, weights and settings?')){S=Object.assign({},def);save();fillSettings();renderToday();renderTrends();toast('Reset done')}};
+document.getElementById('importFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      if(typeof data!=='object'||data===null)throw new Error('Not a valid backup file');
+      // merge days: keep existing, add/restore any from backup not already present
+      const mergedDays=Object.assign({},data.days||{},S.days||{});
+      // merge weights by date (existing wins on conflict)
+      const wmap={};(data.weights||[]).forEach(w=>{if(w&&w.date)wmap[w.date]=w});
+      (S.weights||[]).forEach(w=>{if(w&&w.date)wmap[w.date]=w});
+      const mergedWeights=Object.values(wmap).sort((a,b)=>a.date<b.date?-1:1);
+      const dayCount=Object.keys(data.days||{}).length, wCount=(data.weights||[]).length;
+      // settings: prefer current non-empty values, fall back to backup
+      S={...def,...data,...S,
+         apiKey:S.apiKey||data.apiKey||'',
+         days:mergedDays, weights:mergedWeights};
+      save();fillSettings();renderToday();renderTrends();
+      toast('Restored ✓ '+dayCount+' days, '+wCount+' weigh-ins merged');
+    }catch(err){toast('Import failed: '+err.message,1)}
+  };
+  r.onerror=()=>toast('Could not read that file',1);
+  r.readAsText(f);
+};
+document.getElementById('wipeData').onclick=()=>{if(confirm('Erase all logged food, weights and settings? Export a backup first if unsure.')){S=Object.assign({},def);save();fillSettings();renderToday();renderTrends();toast('Reset done')}};
 document.getElementById('quickSettings').onclick=()=>nav('settings');
 
 /* ---------------- food add ---------------- */
