@@ -14,6 +14,7 @@
     --bg:#000000; --surface:#111316; --surface2:#1a1d22; --line:#23272d;
     --text:#f2f4f7; --muted:#8a909b; --faint:#5a606b;
     --ember:#ff6b35; --teal:#2dd4bf; --blue:#3b82f6; --red:#ef4444; --amber:#f5b942;
+    --cal:#4d8df0; --pro:#f5734f; --fat:#f2c230; --carb:#3ec46d;
     --chrome:#f2f4f7;
     --r:18px;
   }
@@ -48,22 +49,23 @@
   .ringctr .big{font-size:46px;font-weight:800;line-height:1}
   .ringctr .lbl{color:var(--muted);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
   .ringctr .sub{font-size:13px;color:var(--faint);margin-top:4px}
-  .ringctr .sub b{color:var(--teal)}
+  .ringctr .sub b{color:var(--cal)}
   .ringctr .over b{color:var(--red)}
 
   .statsrow{display:flex;gap:10px;margin-top:18px;width:100%}
   .stat{flex:1;background:var(--surface2);border-radius:14px;padding:12px 8px;text-align:center}
   .stat .v{font-family:'Bricolage Grotesque';font-weight:700;font-size:19px}
   .stat .k{color:var(--muted);font-size:11px;margin-top:2px;letter-spacing:.03em}
-  .stat.protein .v{color:var(--teal)}
-  .stat.carb .v{color:var(--blue)}
-  .stat.fat .v{color:var(--amber)}
+  .stat.protein .v{color:var(--pro)}
+  .stat.carb .v{color:var(--carb)}
+  .stat.fat .v{color:var(--fat)}
 
   /* protein bar */
   .pbar{margin-top:16px;width:100%}
   .pbar .top{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:7px}
   .pbar .track{height:9px;background:var(--surface2);border-radius:99px;overflow:hidden}
-  .pbar .fill{height:100%;background:var(--teal);border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .pbar .fill{height:100%;background:var(--pro);border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .pbar .fill.calfill{background:var(--cal)}
 
   /* food list */
   .seclabel{display:flex;align-items:center;justify-content:space-between;padding:6px 4px 12px}
@@ -80,24 +82,46 @@
   .food .del svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
   .empty{text-align:center;color:var(--faint);padding:30px 10px;font-size:14px}
 
-  /* add bar */
-  /* add card (in-flow at bottom of Today) */
-  .addcard{padding:14px}
-  .addrow{display:flex;gap:8px;margin-bottom:10px}
-  .addrow input{background:var(--surface2);border:1px solid var(--line)}
-  .addbtn{width:100%;background:var(--chrome);color:#000;font-weight:700;font-family:'Bricolage Grotesque';font-size:16px;padding:14px;border-radius:13px;letter-spacing:-.01em}
+  /* shared add button */
+  .addbtn{width:100%;background:var(--chrome);color:#000;font-weight:700;font-family:'Bricolage Grotesque';font-size:16px;padding:14px;border-radius:13px;letter-spacing:-.01em;display:flex;align-items:center;justify-content:center}
   .addbtn:active{transform:scale(.98)}
+  .addbtn .svi{stroke:#000;fill:#000;width:16px;height:16px}
   .iconbtn{width:44px;height:44px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;flex-shrink:0;font-size:19px}
   .iconbtn:active{transform:scale(.92)}
-  /* file input hidden but still tappable on iOS standalone — never use display:none here */
-  #photoBtn{position:relative;overflow:hidden;cursor:pointer}
-  #photoBtn input[type=file]{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:0}
+
+  /* add pop-up sheet */
+  .sheet{position:fixed;inset:0;z-index:80}
+  .sheet.hidden{display:none}
+  .sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);animation:fade .2s ease}
+  .sheet-card{position:absolute;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--surface);border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid var(--line);padding:10px 18px max(24px,env(safe-area-inset-bottom));animation:slideup .26s cubic-bezier(.2,.9,.3,1)}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  @keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .sheet-grab{width:38px;height:4px;border-radius:99px;background:var(--line);margin:4px auto 14px}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .sheet-head h3{font-size:20px;font-weight:800}
+  .sheet-x{width:32px;height:32px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;color:var(--muted)}
+  .sheet-x svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  .sheet-input{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+  .sheet-input input{background:var(--surface2);border:1px solid var(--line)}
+  .tilerow{display:flex;gap:10px;margin-bottom:4px}
+  .tile{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12px;color:var(--text);cursor:pointer;position:relative;overflow:hidden}
+  .tile:active{transform:scale(.96)}
+  .tile.on{border-color:var(--chrome)}
+  .tic{display:grid;place-items:center}
+  .tic svg{width:22px;height:22px;stroke:var(--text);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .tile input[type=file]{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:0}
+  .panel{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .panel.hidden{display:none}
+  .panel input{background:var(--surface2);border:1px solid var(--line)}
 
   /* nav */
-  nav{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:rgba(0,0,0,.9);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;padding:10px 0 max(10px,env(safe-area-inset-bottom))}
+  nav{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:rgba(0,0,0,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;align-items:flex-start;padding:10px 0 max(10px,env(safe-area-inset-bottom))}
   nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--faint);font-size:10.5px;letter-spacing:.02em}
   nav button .ic{display:grid;place-items:center}
   nav button .ic svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  nav .fab{flex:0 0 auto;width:56px;height:56px;border-radius:50%;background:var(--chrome);display:grid;place-items:center;margin-top:-22px;box-shadow:0 6px 20px rgba(0,0,0,.5);gap:0}
+  nav .fab svg{width:26px;height:26px;stroke:#000;fill:none;stroke-width:2.4;stroke-linecap:round}
+  nav .fab:active{transform:scale(.92)}
   nav button.on{color:var(--text)}
   nav button.on .ic svg{stroke:var(--chrome)}
 
@@ -159,10 +183,10 @@
   .editrow:last-child{border-bottom:none}
   .editrow .er1{margin-bottom:8px}
   .editrow .er1 input{font-size:14px;padding:9px 11px}
-  .editrow .ermac{display:flex;gap:7px}
-  .editrow .ermac .m{flex:1}
-  .editrow .ermac .m label{display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center;letter-spacing:.03em}
-  .editrow .ermac input{font-size:13px;padding:8px 4px;text-align:center}
+  .ermac{display:flex;gap:7px}
+  .ermac .m{flex:1}
+  .ermac .m label{display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center;letter-spacing:.03em}
+  .ermac input{font-size:13px;padding:8px 4px;text-align:center}
   .editrow .erbtns{display:flex;gap:8px;margin-top:9px}
   .editrow .erbtns button{flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:600}
   .editrow .erbtns .sv{background:var(--teal);color:#06201d}
@@ -173,7 +197,6 @@
 
 <header>
   <h1>Macro<span>Lab</span></h1>
-  <button class="iconbtn" id="quickSettings" style="background:var(--surface)"><svg class="svi" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
 </header>
 
 <!-- ============ TODAY ============ -->
@@ -188,7 +211,7 @@
       <div class="ring">
         <svg width="200" height="200" viewBox="0 0 200 200">
           <circle cx="100" cy="100" r="88" fill="none" stroke="var(--surface2)" stroke-width="14"/>
-          <circle id="ringFill" cx="100" cy="100" r="88" fill="none" stroke="var(--chrome)" stroke-width="14"
+          <circle id="ringFill" cx="100" cy="100" r="88" fill="none" stroke="var(--cal)" stroke-width="14"
                   stroke-linecap="round" stroke-dasharray="552.9" stroke-dashoffset="552.9"/>
         </svg>
         <div class="ringctr">
@@ -205,6 +228,11 @@
       </div>
 
       <div class="pbar">
+        <div class="top"><span>Calories</span><span id="cGoalTxt">0 / 2000</span></div>
+        <div class="track"><div class="fill calfill" id="cFill" style="width:0%"></div></div>
+      </div>
+
+      <div class="pbar" style="margin-top:13px">
         <div class="top"><span>Protein goal</span><span id="pGoalTxt">0 / 117g</span></div>
         <div class="track"><div class="fill" id="pFill" style="width:0%"></div></div>
       </div>
@@ -212,17 +240,7 @@
 
     <div class="card">
       <div class="seclabel"><h3>Logged food</h3><span class="cnt" id="foodCnt">0 items</span></div>
-      <div id="foodList"><div class="empty">No food logged yet.<br>Add your first meal below.</div></div>
-    </div>
-
-    <div class="card addcard">
-      <div class="addrow">
-        <input type="text" id="foodInput" placeholder="e.g. 150g lemongrass chicken + 200g rice" enterkeyhint="done">
-        <label class="iconbtn" id="photoBtn" title="Photo" for="foodPhoto"><svg class="svi" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <input type="file" accept="image/*" id="foodPhoto">
-        </label>
-      </div>
-      <button class="addbtn" id="addBtn">Add food</button>
+      <div id="foodList"><div class="empty">No food logged yet.<br>Tap + to add your first meal.</div></div>
     </div>
   </div>
 </section>
@@ -337,8 +355,55 @@
 <nav>
   <button data-pg="today" class="on"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>Today</button>
   <button data-pg="trends"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span>Trends</button>
+  <button id="fabBtn" class="fab" aria-label="Add"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
   <button data-pg="import"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>Import</button>
+  <button data-pg="settings"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings</button>
 </nav>
+
+<!-- add pop-up sheet -->
+<div id="sheet" class="sheet hidden">
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet-card">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><h3>Add</h3><button class="sheet-x" id="sheetX" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button></div>
+
+    <div class="sheet-input">
+      <input type="text" id="foodInput" placeholder="Describe a meal — e.g. 150g chicken + 200g rice" enterkeyhint="done">
+      <button class="addbtn" id="addBtn"><svg class="svi" viewBox="0 0 24 24" style="margin-right:6px"><path d="M5 3l14 9-14 9V3z"/></svg>Estimate with AI</button>
+    </div>
+
+    <div class="tilerow">
+      <label class="tile" id="photoBtn" for="foodPhoto">
+        <span class="tic"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>Photo
+        <input type="file" accept="image/*" id="foodPhoto">
+      </label>
+      <button class="tile" id="quickTile">
+        <span class="tic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>Quick add
+      </button>
+      <button class="tile" id="weightTile">
+        <span class="tic"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9z"/><path d="M12 8l3 4H9z"/></svg></span>Weight
+      </button>
+    </div>
+
+    <div id="quickPanel" class="panel hidden">
+      <div class="er1" style="margin-bottom:8px"><input type="text" id="qa-name" placeholder="Food name"></div>
+      <div class="ermac">
+        <div class="m"><label>CAL</label><input type="number" inputmode="numeric" id="qa-cal"></div>
+        <div class="m"><label>P</label><input type="number" inputmode="numeric" id="qa-p"></div>
+        <div class="m"><label>C</label><input type="number" inputmode="numeric" id="qa-c"></div>
+        <div class="m"><label>F</label><input type="number" inputmode="numeric" id="qa-f"></div>
+      </div>
+      <button class="addbtn" id="qaSave" style="margin-top:10px">Add manually</button>
+    </div>
+
+    <div id="weightPanel" class="panel hidden">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" inputmode="decimal" id="wt-kg" placeholder="Weight in kg">
+        <button class="addbtn" id="wtSave" style="width:auto;padding:14px 20px">Log</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="toast"></div>
 
@@ -450,7 +515,12 @@ function renderToday(){
   const pct=Math.min(cal/goal,1);
   const ring=document.getElementById('ringFill');
   ring.style.strokeDashoffset=RC*(1-pct);
-  ring.setAttribute('stroke',cal>goal?'var(--red)':'var(--chrome)');
+  ring.setAttribute('stroke',cal>goal?'var(--red)':'var(--cal)');
+
+  const cFill=document.getElementById('cFill');
+  cFill.style.width=Math.min(cal/goal*100,100)+'%';
+  cFill.style.background=cal>goal?'var(--red)':'var(--cal)';
+  document.getElementById('cGoalTxt').textContent=cal+' / '+goal;
 
   document.getElementById('pVal').textContent=p+'g';
   document.getElementById('cVal').textContent=c+'g';
@@ -550,7 +620,7 @@ function renderTrends(){
   const mx=Math.max(S.calGoal,...days.map(x=>x.cal))*1.1||1;
   bars.innerHTML=days.map(x=>{
     const h=x.cal/mx*100;
-    const col=x.cal===0?'var(--surface2)':(x.cal>x.goal?'var(--red)':'var(--chrome)');
+    const col=x.cal===0?'var(--surface2)':(x.cal>x.goal?'var(--red)':'var(--cal)');
     return `<div class="col"><div class="bar" style="height:${Math.max(h,2)}%;background:${col}"></div>
       <div class="bl">${x.d.toLocaleDateString('en-AU',{weekday:'narrow'})}</div></div>`}).join('');
   const avg=n?Math.round(tot/n):0;
@@ -608,21 +678,66 @@ document.getElementById('importFile').onchange=e=>{
   r.readAsText(f);
 };
 document.getElementById('wipeData').onclick=()=>{if(confirm('Erase all logged food, weights and settings? Export a backup first if unsure.')){S=Object.assign({},def);save();fillSettings();renderToday();renderTrends();toast('Reset done')}};
-document.getElementById('quickSettings').onclick=()=>nav('settings');
+
+/* ---------------- add sheet ---------------- */
+function openSheet(){document.getElementById('sheet').classList.remove('hidden')}
+function closeSheet(){
+  document.getElementById('sheet').classList.add('hidden');
+  document.getElementById('quickPanel').classList.add('hidden');
+  document.getElementById('weightPanel').classList.add('hidden');
+  document.getElementById('quickTile').classList.remove('on');
+  document.getElementById('weightTile').classList.remove('on');
+  document.getElementById('foodInput').value='';
+}
+document.getElementById('fabBtn').onclick=openSheet;
+document.getElementById('sheetX').onclick=closeSheet;
+document.getElementById('sheetBg').onclick=closeSheet;
+document.getElementById('quickTile').onclick=()=>{
+  const pe=document.getElementById('quickPanel'),we=document.getElementById('weightPanel');
+  we.classList.add('hidden');document.getElementById('weightTile').classList.remove('on');
+  pe.classList.toggle('hidden');document.getElementById('quickTile').classList.toggle('on',!pe.classList.contains('hidden'));
+};
+document.getElementById('weightTile').onclick=()=>{
+  const pe=document.getElementById('quickPanel'),we=document.getElementById('weightPanel');
+  pe.classList.add('hidden');document.getElementById('quickTile').classList.remove('on');
+  we.classList.toggle('hidden');document.getElementById('weightTile').classList.toggle('on',!we.classList.contains('hidden'));
+};
 
 /* ---------------- food add ---------------- */
 async function addFood(){
   const inp=document.getElementById('foodInput');const t=inp.value.trim();if(!t)return;
   inp.value='';inp.blur();
-  try{const r=await analyzeFoodText(t);getDay(viewDate).foods.push(r);save();renderToday();renderTrends();toast('Added '+Math.round(r.calories)+' cal ✓')}
+  try{const r=await analyzeFoodText(t);getDay(viewDate).foods.push(r);save();renderToday();renderTrends();closeSheet();toast('Added '+Math.round(r.calories)+' cal ✓')}
   catch(e){toast(e.message.includes('API')?e.message:'Couldn’t estimate that — try again',1)}
 }
 document.getElementById('addBtn').onclick=addFood;
 document.getElementById('foodInput').addEventListener('keydown',e=>{if(e.key==='Enter')addFood()});
 document.getElementById('foodPhoto').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;e.target.value='';
-  try{const r=await analyzeFoodPhoto(f);getDay(viewDate).foods.push(r);save();renderToday();renderTrends();toast('Added '+esc(r.name)+' ✓')}
+  try{const r=await analyzeFoodPhoto(f);getDay(viewDate).foods.push(r);save();renderToday();renderTrends();closeSheet();toast('Added '+esc(r.name)+' ✓')}
   catch(err){toast(err.message.includes('API')?err.message:'Couldn’t read that photo',1)}
+};
+/* quick add (manual macros) */
+document.getElementById('qaSave').onclick=()=>{
+  const name=document.getElementById('qa-name').value.trim()||'Quick add';
+  const cal=+document.getElementById('qa-cal').value||0;
+  const p=+document.getElementById('qa-p').value||0;
+  const c=+document.getElementById('qa-c').value||0;
+  const fat=+document.getElementById('qa-f').value||0;
+  if(!cal&&!p&&!c&&!fat){toast('Enter at least one value',1);return}
+  getDay(viewDate).foods.push({name,calories:cal,protein:p,carbs:c,fat:fat});
+  save();renderToday();renderTrends();
+  ['qa-name','qa-cal','qa-p','qa-c','qa-f'].forEach(id=>document.getElementById(id).value='');
+  closeSheet();toast('Added '+cal+' cal ✓');
+};
+/* quick weight log */
+document.getElementById('wtSave').onclick=()=>{
+  const kg=+(+document.getElementById('wt-kg').value).toFixed(2);
+  if(isNaN(kg)||kg<=0||kg>500){toast('Enter a valid weight',1);return}
+  const today=iso(new Date());
+  S.weights=S.weights.filter(w=>w.date!==today);S.weights.push({date:today,kg});
+  save();renderTrends();document.getElementById('wt-kg').value='';
+  closeSheet();toast('Weight logged: '+kg+'kg ✓');
 };
 
 /* ---------------- import ---------------- */
@@ -665,7 +780,7 @@ function nav(pg){
   if(pg==='trends')renderTrends();if(pg==='settings')fillSettings();
   window.scrollTo(0,0);
 }
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>nav(b.dataset.pg));
+document.querySelectorAll('nav button[data-pg]').forEach(b=>b.onclick=()=>nav(b.dataset.pg));
 document.getElementById('prevDay').onclick=()=>{viewDate.setDate(viewDate.getDate()-1);editIdx=-1;renderToday()};
 document.getElementById('nextDay').onclick=()=>{viewDate.setDate(viewDate.getDate()+1);editIdx=-1;renderToday()};
 
