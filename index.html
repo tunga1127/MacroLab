@@ -41,18 +41,28 @@
   .wrap{padding:0 16px}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
 
-  /* ring */
-  .ringcard{display:flex;flex-direction:column;align-items:center;padding-top:24px;padding-bottom:22px}
-  .ring{position:relative;width:200px;height:200px}
+  /* nutrition card — centered ring + 3 macro bars */
+  .nutcard{padding:20px 16px;display:flex;flex-direction:column;align-items:center}
+  .ringwrap{display:flex;align-items:center;gap:16px;width:100%;justify-content:space-between;margin-bottom:22px}
+  .ring{position:relative;width:160px;height:160px;flex-shrink:0}
   .ring svg{transform:rotate(-90deg)}
-  .ringctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-  .ringctr .big{font-size:46px;font-weight:800;line-height:1}
-  .ringctr .lbl{color:var(--muted);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
-  .ringctr .sub{font-size:13px;color:var(--faint);margin-top:4px}
-  .ringctr .sub b{color:var(--cal)}
-  .ringctr .over b{color:var(--red)}
+  .ringctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+  .ringctr .big{font-size:36px;font-weight:800;line-height:1}
+  .ringctr .lbl{color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+  .ringside{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .ringside .rnum{font-size:28px;font-weight:800}
+  .ringside .rlbl{font-size:11px;color:var(--muted);letter-spacing:.03em}
 
-  .statsrow{display:flex;gap:10px;margin-top:18px;width:100%}
+  .macrorow{display:flex;gap:12px;width:100%}
+  .macrobar{flex:1;display:flex;flex-direction:column;gap:5px}
+  .mbarlbl{font-size:12px;color:var(--muted);letter-spacing:.02em;text-align:center}
+  .mbartrack{height:8px;background:var(--surface2);border-radius:99px;overflow:hidden}
+  .mbfill{height:100%;background:var(--pro);border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .mbfill.fat{background:var(--fat)}
+  .mbfill.carb{background:var(--carb)}
+  .mbarval{font-size:12px;color:var(--text);text-align:center;font-weight:600}
+
+  .statsrow{display:flex;gap:10px;margin-top:0;width:100%}
   .stat{flex:1;background:var(--surface2);border-radius:14px;padding:12px 8px;text-align:center}
   .stat .v{font-family:'Bricolage Grotesque';font-weight:700;font-size:19px}
   .stat .k{color:var(--muted);font-size:11px;margin-top:2px;letter-spacing:.03em}
@@ -207,34 +217,47 @@
     <button id="nextDay">›</button>
   </div>
   <div class="wrap">
-    <div class="card ringcard">
-      <div class="ring">
-        <svg width="200" height="200" viewBox="0 0 200 200">
-          <circle cx="100" cy="100" r="88" fill="none" stroke="var(--surface2)" stroke-width="14"/>
-          <circle id="ringFill" cx="100" cy="100" r="88" fill="none" stroke="var(--cal)" stroke-width="14"
-                  stroke-linecap="round" stroke-dasharray="552.9" stroke-dashoffset="552.9"/>
-        </svg>
-        <div class="ringctr">
-          <div class="big num" id="calNum">0</div>
-          <div class="lbl">of <span id="calTarget">1850</span> kcal</div>
-          <div class="sub" id="calSub"><b>1850</b> left</div>
+    <div class="card nutcard">
+      <!-- ring with remaining/consumed/target -->
+      <div class="ringwrap">
+        <div class="ringside left">
+          <div class="rnum" id="calRemain">0</div>
+          <div class="rlbl">Remaining</div>
+        </div>
+        <div class="ring">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="70" fill="none" stroke="var(--surface2)" stroke-width="11"/>
+            <circle id="ringFill" cx="80" cy="80" r="70" fill="none" stroke="var(--cal)" stroke-width="11"
+                    stroke-linecap="round" stroke-dasharray="439.8" stroke-dashoffset="439.8"/>
+          </svg>
+          <div class="ringctr">
+            <div class="big num" id="calNum">0</div>
+            <div class="lbl">Consumed</div>
+          </div>
+        </div>
+        <div class="ringside right">
+          <div class="rnum" id="calTarget">1939</div>
+          <div class="rlbl">Target</div>
         </div>
       </div>
 
-      <div class="statsrow">
-        <div class="stat protein"><div class="v num" id="pVal">0g</div><div class="k">Protein</div></div>
-        <div class="stat carb"><div class="v num" id="cVal">0g</div><div class="k">Carbs</div></div>
-        <div class="stat fat"><div class="v num" id="fVal">0g</div><div class="k">Fat</div></div>
-      </div>
-
-      <div class="pbar">
-        <div class="top"><span>Calories</span><span id="cGoalTxt">0 / 2000</span></div>
-        <div class="track"><div class="fill calfill" id="cFill" style="width:0%"></div></div>
-      </div>
-
-      <div class="pbar" style="margin-top:13px">
-        <div class="top"><span>Protein goal</span><span id="pGoalTxt">0 / 117g</span></div>
-        <div class="track"><div class="fill" id="pFill" style="width:0%"></div></div>
+      <!-- three macro bars in a row -->
+      <div class="macrorow">
+        <div class="macrobar">
+          <div class="mbarlbl">Protein</div>
+          <div class="mbartrack"><div class="mbfill" id="pFill" style="width:0%"></div></div>
+          <div class="mbarval" id="pGoalTxt">0 / 117g</div>
+        </div>
+        <div class="macrobar">
+          <div class="mbarlbl">Fat</div>
+          <div class="mbartrack"><div class="mbfill fat" id="fFill" style="width:0%"></div></div>
+          <div class="mbarval" id="fGoalTxt">0 / 64g</div>
+        </div>
+        <div class="macrobar">
+          <div class="mbarlbl">Carbs</div>
+          <div class="mbartrack"><div class="mbfill carb" id="cFill" style="width:0%"></div></div>
+          <div class="mbarval" id="cGoalTxt">0 / 232g</div>
+        </div>
       </div>
     </div>
 
@@ -495,7 +518,6 @@ async function readRenpho(file){
 }
 
 /* ---------------- render today ---------------- */
-const RC=2*Math.PI*88;
 function renderToday(){
   document.getElementById('dayLabel').textContent=dayLabel(viewDate);
   const day=getDay(viewDate);
@@ -505,28 +527,29 @@ function renderToday(){
   day.foods.forEach(x=>{cal+=x.calories||0;p+=x.protein||0;c+=x.carbs||0;f+=x.fat||0});
   cal=Math.round(cal);p=Math.round(p);c=Math.round(c);f=Math.round(f);
 
-  document.getElementById('calNum').textContent=cal;
-  document.getElementById('calTarget').textContent=goal;
-  const left=goal-cal;
-  const subEl=document.getElementById('calSub');
-  if(left>=0){subEl.className='sub';subEl.innerHTML='<b>'+left+'</b> left'}
-  else{subEl.className='sub over';subEl.innerHTML='<b>'+Math.abs(left)+'</b> over'}
-
   const pct=Math.min(cal/goal,1);
+  const left=goal-cal;
+
+  // ring animation
+  const RC=2*Math.PI*70;
   const ring=document.getElementById('ringFill');
   ring.style.strokeDashoffset=RC*(1-pct);
   ring.setAttribute('stroke',cal>goal?'var(--red)':'var(--cal)');
 
-  const cFill=document.getElementById('cFill');
-  cFill.style.width=Math.min(cal/goal*100,100)+'%';
-  cFill.style.background=cal>goal?'var(--red)':'var(--cal)';
-  document.getElementById('cGoalTxt').textContent=cal+' / '+goal;
+  // ring labels: remaining | consumed | target
+  document.getElementById('calRemain').textContent=left>=0?left:'-'+Math.abs(left);
+  document.getElementById('calNum').textContent=cal;
+  document.getElementById('calTarget').textContent=goal;
 
-  document.getElementById('pVal').textContent=p+'g';
-  document.getElementById('cVal').textContent=c+'g';
-  document.getElementById('fVal').textContent=f+'g';
+  // macro bars (Protein, Fat, Carbs)
   document.getElementById('pGoalTxt').textContent=p+' / '+S.proGoal+'g';
   document.getElementById('pFill').style.width=Math.min(p/S.proGoal*100,100)+'%';
+  
+  document.getElementById('fGoalTxt').textContent=f+' / 64g';
+  document.getElementById('fFill').style.width=Math.min(f/64*100,100)+'%';
+  
+  document.getElementById('cGoalTxt').textContent=c+' / 232g';
+  document.getElementById('cFill').style.width=Math.min(c/232*100,100)+'%';
 
   const list=document.getElementById('foodList');
   document.getElementById('foodCnt').textContent=day.foods.length+(day.foods.length===1?' item':' items');
