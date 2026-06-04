@@ -18,7 +18,7 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;overscroll-behavior:none}
-  body{padding-bottom:170px;max-width:520px;margin:0 auto;min-height:100vh}
+  body{padding-bottom:90px;max-width:520px;margin:0 auto;min-height:100vh}
   h1,h2,h3,.num{font-family:'Bricolage Grotesque',sans-serif}
   .num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
   button{font-family:inherit;cursor:pointer;border:none;color:inherit;background:none}
@@ -79,10 +79,12 @@
   .empty{text-align:center;color:var(--faint);padding:30px 10px;font-size:14px}
 
   /* add bar */
-  .addbar{position:fixed;bottom:78px;left:0;right:0;max-width:520px;margin:0 auto;padding:0 16px;z-index:40}
-  .addinner{display:flex;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
-  .addinner input{background:transparent;border:none;padding:10px 8px}
-  .addinner input:focus{border:none}
+  /* add card (in-flow at bottom of Today) */
+  .addcard{padding:14px}
+  .addrow{display:flex;gap:8px;margin-bottom:10px}
+  .addrow input{background:var(--surface2);border:1px solid var(--line)}
+  .addbtn{width:100%;background:var(--ember);color:#0a0b0d;font-weight:700;font-family:'Bricolage Grotesque';font-size:16px;padding:14px;border-radius:13px;letter-spacing:-.01em}
+  .addbtn:active{transform:scale(.98)}
   .iconbtn{width:44px;height:44px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;flex-shrink:0;font-size:19px}
   .iconbtn.go{background:var(--ember);color:#0a0b0d}
   .iconbtn:active{transform:scale(.92)}
@@ -200,6 +202,16 @@
       <div class="seclabel"><h3>Logged food</h3><span class="cnt" id="foodCnt">0 items</span></div>
       <div id="foodList"><div class="empty">No food logged yet.<br>Add something below 👇</div></div>
     </div>
+
+    <div class="card addcard">
+      <div class="addrow">
+        <input type="text" id="foodInput" placeholder="e.g. 150g lemongrass chicken + 200g rice" enterkeyhint="done">
+        <label class="iconbtn" id="photoBtn" title="Photo" for="foodPhoto">📷
+          <input type="file" accept="image/*" id="foodPhoto">
+        </label>
+      </div>
+      <button class="addbtn" id="addBtn">Add food</button>
+    </div>
   </div>
 </section>
 
@@ -310,22 +322,10 @@
   </div>
 </section>
 
-<!-- add bar (today only) -->
-<div class="addbar" id="addBar">
-  <div class="addinner">
-    <input type="text" id="foodInput" placeholder="e.g. 150g lemongrass chicken + 200g rice" enterkeyhint="done">
-    <label class="iconbtn" id="photoBtn" title="Photo" for="foodPhoto">📷
-      <input type="file" accept="image/*" id="foodPhoto">
-    </label>
-    <button class="iconbtn go" id="addBtn">→</button>
-  </div>
-</div>
-
 <nav>
   <button data-pg="today" class="on"><span class="ic">◎</span>Today</button>
   <button data-pg="trends"><span class="ic">📈</span>Trends</button>
   <button data-pg="import"><span class="ic">⬆</span>Import</button>
-  <button data-pg="settings"><span class="ic">⚙</span>Settings</button>
 </nav>
 
 <div id="toast"></div>
@@ -650,7 +650,6 @@ document.getElementById('renphoFile').onchange=async e=>{
 function nav(pg){
   ['today','trends','import','settings'].forEach(p=>document.getElementById('page-'+p).classList.toggle('hidden',p!==pg));
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.pg===pg));
-  document.getElementById('addBar').classList.toggle('hidden',pg!=='today');
   if(pg==='trends')renderTrends();if(pg==='settings')fillSettings();
   window.scrollTo(0,0);
 }
