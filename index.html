@@ -123,6 +123,28 @@
   .foodMatch:active{background:var(--line)}
   .foodMatch .fname{font-weight:500}
   .foodMatch .fmacro{font-size:11px;color:var(--muted);margin-top:2px}
+  .foodMatch .fsrc{font-size:10px;color:var(--faint);margin-top:2px;letter-spacing:.02em}
+  .matchsep{padding:6px 12px;font-size:10px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--line);background:var(--surface)}
+  .match-loading{padding:10px 12px;font-size:12px;color:var(--faint)}
+  /* serving picker */
+  .servpanel{margin-top:0;padding:14px 0 4px;border-top:1px solid var(--line)}
+  .servpanel.hidden{display:none}
+  .servfood{font-size:13px;font-weight:600;margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .servpresets{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+  .servpreset{padding:6px 12px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);font-size:12px;font-weight:600;cursor:pointer}
+  .servpreset.on{background:var(--teal);border-color:var(--teal);color:#06201d}
+  .servpreset:active{transform:scale(.94)}
+  .servrow{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+  .servrow input{flex:1;text-align:center;font-size:18px;font-weight:700;padding:10px}
+  .servrow .unit{color:var(--muted);font-size:13px;white-space:nowrap}
+  .servmacros{display:flex;gap:8px;margin-bottom:12px}
+  .servmacro{flex:1;background:var(--surface2);border-radius:10px;padding:8px 4px;text-align:center}
+  .servmacro .sv{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:15px}
+  .servmacro .sk{font-size:10px;color:var(--muted);margin-top:1px}
+  .servmacro.cal .sv{color:var(--cal)}
+  .servmacro.pro .sv{color:var(--pro)}
+  .servmacro.fat .sv{color:var(--fat)}
+  .servmacro.carb .sv{color:var(--carb)}
   .tilerow{display:flex;gap:10px;margin-bottom:4px}
   .tile{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12px;color:var(--text);cursor:pointer;position:relative;overflow:hidden}
   .tile:active{transform:scale(.96)}
@@ -438,6 +460,22 @@
         <button class="addbtn" id="wtSave" style="width:auto;padding:14px 20px">Log</button>
       </div>
     </div>
+
+    <div id="servPanel" class="servpanel hidden">
+      <div class="servfood" id="servFoodName"></div>
+      <div class="servpresets" id="servPresets"></div>
+      <div class="servrow">
+        <input type="number" inputmode="decimal" id="servGrams" placeholder="100" min="1" max="9999">
+        <span class="unit">g</span>
+      </div>
+      <div class="servmacros">
+        <div class="servmacro cal"><div class="sv" id="srv-cal">0</div><div class="sk">CAL</div></div>
+        <div class="servmacro pro"><div class="sv" id="srv-pro">0</div><div class="sk">P</div></div>
+        <div class="servmacro carb"><div class="sv" id="srv-carb">0</div><div class="sk">C</div></div>
+        <div class="servmacro fat"><div class="sv" id="srv-fat">0</div><div class="sk">F</div></div>
+      </div>
+      <button class="addbtn" id="servAdd">Add this serving</button>
+    </div>
   </div>
 </div>
 
@@ -477,8 +515,187 @@ function searchFoods(query) {
   const q = query.toLowerCase();
   return Object.entries(db)
     .filter(([name]) => name.toLowerCase().includes(q))
-    .slice(0, 8)
-    .map(([name, macros]) => ({name, ...macros}));
+    .slice(0, 6)
+    .map(([name, macros]) => ({name, ...macros, source:'afcd'}));
+}
+
+/* ---- Australian branded foods database (embedded, offline, no API needed) ---- */
+let brandedDatabase = null;
+const BRANDEDDB_B64 = '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';
+
+function decompressBrandedDB() {
+  if(brandedDatabase) return brandedDatabase;
+  try {
+    const binary = atob(BRANDEDDB_B64);
+    const bytes = new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+    brandedDatabase = JSON.parse(pako.ungzip(bytes, {to:'string'}));
+    return brandedDatabase;
+  } catch(e) { return {}; }
+}
+
+function searchBranded(query) {
+  if(!query || query.length < 2) return Promise.resolve([]);
+  const db = decompressBrandedDB();
+  const q = query.toLowerCase();
+  return Promise.resolve(
+    Object.entries(db)
+      .filter(([name]) => name.toLowerCase().includes(q))
+      .slice(0,5)
+      .map(([name,macros]) => ({name,...macros,source:'branded',per:'per 100g'}))
+  );
+}
+}
+
+/* ---- Unified search: AFCD instant + OFF async ---- */
+let offDebounce=null;
+let lastSearchQuery='';
+
+function renderMatchItems(items, container, append=false) {
+  if(!append) container.innerHTML='';
+  items.forEach(item => {
+    const el=document.createElement('div');
+    el.className='foodMatch'+(item.source==='off'?' off-result':'');
+    const per = item.per||'per 100g';
+    const src = item.source==='off'
+      ? '<div class="fsrc">🏪 Branded · '+per+'</div>'
+      : '<div class="fsrc">🇦🇺 AFCD · per 100g</div>';
+    el.innerHTML=`<div class="fname">${esc(item.name)}</div>
+      <div class="fmacro">${item.calories} cal · P ${item.protein}g · C ${item.carbs}g · F ${item.fat}g</div>
+      ${src}`;
+    el.addEventListener('touchstart', ()=>{}, {passive:true}); // iOS tap fix
+    el.onclick=()=>addFoodFromDB(item);
+    container.appendChild(el);
+  });
+}
+
+async function doFoodSearch(query) {
+  lastSearchQuery = query;
+  const box = document.getElementById('foodMatches');
+  if(!query || query.length < 2) { box.classList.add('hidden'); box.innerHTML=''; return; }
+
+  // 1. Show AFCD results immediately
+  const afcdResults = searchFoods(query);
+  box.innerHTML='';
+  box.classList.remove('hidden');
+
+  if(afcdResults.length) {
+    const sep=document.createElement('div');sep.className='matchsep';sep.textContent='Australian Foods';box.appendChild(sep);
+    renderMatchItems(afcdResults, box, true);
+  }
+
+  // 2. Append OFF spinner
+  const loadEl=document.createElement('div');loadEl.className='match-loading';loadEl.id='off-loading';
+  loadEl.innerHTML='<span class="spin"></span> Searching branded foods…';
+  box.appendChild(loadEl);
+
+  // 3. Fire OFF search
+  const offResults = await searchBranded(query);
+  const loader=document.getElementById('off-loading');
+  if(loader) loader.remove();
+
+  // Only show if query hasn't changed while we were waiting
+  if(query !== lastSearchQuery) return;
+
+  if(offResults.length) {
+    const sep2=document.createElement('div');sep2.className='matchsep';sep2.textContent='Branded & Packaged';box.appendChild(sep2);
+    renderMatchItems(offResults, box, true);
+  }
+
+  if(!afcdResults.length && !offResults.length) {
+    box.innerHTML='<div class="match-loading">No matches — try AI estimate below</div>';
+  }
+}
+
+/* ---- Serving picker ---- */
+let _servItem = null; // the per-100g base item being portioned
+
+// Presets per food category (heuristic on name)
+function getPresets(name) {
+  const n = name.toLowerCase();
+  if(n.includes('yogh') || n.includes('yog'))  return [100,170,200];
+  if(n.includes('chicken') || n.includes('beef') || n.includes('pork') || n.includes('fish') || n.includes('salmon') || n.includes('tuna') || n.includes('turkey') || n.includes('mince')) return [100,120,150,200];
+  if(n.includes('milk')) return [100,200,250];
+  if(n.includes('oat') || n.includes('cereal') || n.includes('muesli')) return [30,45,60];
+  if(n.includes('bread') || n.includes('toast')) return [30,40,50];
+  if(n.includes('rice') || n.includes('pasta') || n.includes('noodle')) return [100,150,200];
+  if(n.includes('egg')) return [50,55,100];
+  if(n.includes('cheese')) return [20,30,40];
+  if(n.includes('protein') || n.includes('shake') || n.includes('powder') || n.includes('supplement')) return [25,30,40];
+  if(n.includes('oil') || n.includes('butter') || n.includes('sauce') || n.includes('dressing')) return [5,10,15];
+  return [50,100,150,200];
+}
+
+function openServPicker(item) {
+  _servItem = item;
+  document.getElementById('foodMatches').classList.add('hidden');
+  document.getElementById('servFoodName').textContent = item.name;
+
+  // Build presets
+  const presets = getPresets(item.name);
+  const presetsEl = document.getElementById('servPresets');
+  presetsEl.innerHTML = '';
+  presets.forEach(g => {
+    const b = document.createElement('button');
+    b.className = 'servpreset';
+    b.textContent = g + 'g';
+    b.onclick = () => {
+      document.getElementById('servGrams').value = g;
+      presetsEl.querySelectorAll('.servpreset').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      updateServMacros(g);
+    };
+    presetsEl.appendChild(b);
+  });
+
+  // Default to first preset
+  const defaultG = presets[1] || presets[0];
+  document.getElementById('servGrams').value = defaultG;
+  presetsEl.children[presets.indexOf(defaultG)]?.classList.add('on');
+  updateServMacros(defaultG);
+
+  document.getElementById('servPanel').classList.remove('hidden');
+  document.getElementById('servGrams').focus();
+}
+
+function updateServMacros(g) {
+  if(!_servItem) return;
+  const r = g / 100;
+  document.getElementById('srv-cal').textContent  = Math.round(_servItem.calories * r);
+  document.getElementById('srv-pro').textContent  = (Math.round(_servItem.protein  * r * 10)/10);
+  document.getElementById('srv-carb').textContent = (Math.round(_servItem.carbs    * r * 10)/10);
+  document.getElementById('srv-fat').textContent  = (Math.round(_servItem.fat      * r * 10)/10);
+}
+
+document.getElementById('servGrams').addEventListener('input', e => {
+  const g = parseFloat(e.target.value);
+  // Deselect presets when typing custom value
+  document.querySelectorAll('.servpreset').forEach(x => x.classList.remove('on'));
+  if(g > 0) updateServMacros(g);
+});
+
+document.getElementById('servAdd').onclick = () => {
+  if(!_servItem) return;
+  const g = parseFloat(document.getElementById('servGrams').value);
+  if(!g || g <= 0) { toast('Enter a serving size', 1); return; }
+  const r = g / 100;
+  const entry = {
+    name: _servItem.name + ' (' + g + 'g)',
+    calories: Math.round(_servItem.calories * r),
+    protein:  Math.round(_servItem.protein  * r * 10) / 10,
+    carbs:    Math.round(_servItem.carbs    * r * 10) / 10,
+    fat:      Math.round(_servItem.fat      * r * 10) / 10,
+  };
+  ensureDay(viewDate).foods.push(entry);
+  save(); renderToday(); renderTrends();
+  _servItem = null;
+  closeSheet();
+  toast('Added ' + entry.calories + ' cal ✓');
+};
+
+function addFoodFromDB(item) {
+  // Hide search results and show serving picker instead
+  openServPicker(item);
 }
 
 function load(){try{return Object.assign({},def,JSON.parse(localStorage.getItem(K)||'{}'))}catch(e){return Object.assign({},def)}}
@@ -766,6 +983,12 @@ function closeSheet(){
   document.getElementById('quickTile').classList.remove('on');
   document.getElementById('weightTile').classList.remove('on');
   document.getElementById('foodInput').value='';
+  document.getElementById('foodMatches').classList.add('hidden');
+  document.getElementById('foodMatches').innerHTML='';
+  document.getElementById('servPanel').classList.add('hidden');
+  document.getElementById('servGrams').value='';
+  lastSearchQuery='';
+  _servItem=null;
 }
 document.getElementById('fabBtn').onclick=openSheet;
 document.getElementById('sheetX').onclick=closeSheet;
@@ -790,6 +1013,13 @@ async function addFood(){
 }
 document.getElementById('addBtn').onclick=addFood;
 document.getElementById('foodInput').addEventListener('keydown',e=>{if(e.key==='Enter')addFood()});
+document.getElementById('foodInput').addEventListener('input',e=>{
+  clearTimeout(offDebounce);
+  const q=e.target.value.trim();
+  if(!q){document.getElementById('foodMatches').classList.add('hidden');return;}
+  // Show AFCD instantly, debounce the OFF call
+  doFoodSearch(q);
+});
 document.getElementById('foodPhoto').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;e.target.value='';
   try{const r=await analyzeFoodPhoto(f);ensureDay(viewDate).foods.push(r);save();renderToday();renderTrends();closeSheet();toast('Added '+esc(r.name)+' ✓')}
