@@ -733,8 +733,22 @@ function dayLabel(isoStr){
   if(isoStr===today)return'Today';if(isoStr===yesterday)return'Yesterday';
   const[y,mo,da]=isoStr.split('-').map(Number);
   return new Date(y,mo-1,da).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});}
-// getDay: read-only — never auto-creates empty records (avoids polluting storage when browsing past days)
-function getDay(isoStr){return S.days[isoStr]||{foods:[]}}
+// getDay: read-only — never auto-creates empty records
+function getDay(isoStr){
+  if(S.days[isoStr]) return S.days[isoStr];
+  // Fallback: if key not found, check if there's a Date-object stringified version
+  // e.g. old data saved as "Thu Jun 05 2025 00:00:00 GMT+1000" instead of "2025-06-05"
+  // Find any key that contains the same YYYY-MM-DD date
+  const match = Object.keys(S.days).find(k => k.startsWith(isoStr) || (k.length > 10 && isoFromDate(new Date(k)) === isoStr));
+  if(match) {
+    // Migrate the key to the correct format
+    S.days[isoStr] = S.days[match];
+    delete S.days[match];
+    save();
+    return S.days[isoStr];
+  }
+  return {foods:[]};
+}
 // ensureDay: only call on write paths (add/edit/delete food)
 function ensureDay(isoStr){if(!S.days[isoStr])S.days[isoStr]={foods:[]};return S.days[isoStr]}
 
