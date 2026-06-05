@@ -612,17 +612,36 @@ let _servItem = null; // the per-100g base item being portioned
 // Presets per food category (heuristic on name)
 function getPresets(name) {
   const n = name.toLowerCase();
-  if(n.includes('yogh') || n.includes('yog'))  return [100,170,200];
+  // Drinks & smoothies — whole container first (check before generic "protein"/"shake")
+  if(n.includes('smoothie'))                    return [425,250,200];
+  if(n.includes('up&go') || n.includes('up go'))return [250,200];
+  if(n.includes('iced coffee') || n.includes('iced tea') || n.includes('chocolate milk') || n.includes('choc milk')) return [250,300,500];
+  if(n.includes('juice') || n.includes('energy drink') || n.includes('cola') || n.includes('pepsi') || n.includes('gatorade') || n.includes('powerade')) return [250,375,500];
+  if(n.includes('ready to drink') || (n.includes('protein') && n.includes('drink'))) return [425,250];
+  // Dairy
+  if(n.includes('yogh') || n.includes('yog'))   return [170,200,250];
+  if(n.includes('milk'))                         return [200,250,300];
+  if(n.includes('cottage cheese'))               return [100,200];
+  if(n.includes('cheese'))                       return [20,30,40];
+  if(n.includes('butter'))                       return [5,10,15];
+  // Protein powder & bars (only if NOT a smoothie/drink — already caught above)
+  if(n.includes('powder') || n.includes('supplement') || n.includes('wpi') || n.includes('whey')) return [25,30,40];
+  if(n.includes('protein bar') || n.includes('bar') && n.includes('protein')) return [60,70];
+  if(n.includes('protein'))                      return [25,30,40];
+  if(n.includes('shake'))                        return [300,400];
+  // Meat & protein foods
   if(n.includes('chicken') || n.includes('beef') || n.includes('pork') || n.includes('fish') || n.includes('salmon') || n.includes('tuna') || n.includes('turkey') || n.includes('mince')) return [100,120,150,200];
-  if(n.includes('milk')) return [100,200,250];
+  if(n.includes('ham') || n.includes('bacon') || n.includes('salami')) return [30,50,80];
+  // Carbs
   if(n.includes('oat') || n.includes('cereal') || n.includes('muesli')) return [30,45,60];
-  if(n.includes('bread') || n.includes('toast')) return [30,40,50];
+  if(n.includes('bread') || n.includes('toast') || n.includes('wrap')) return [30,40,50];
   if(n.includes('rice') || n.includes('pasta') || n.includes('noodle')) return [100,150,200];
-  if(n.includes('egg')) return [50,55,100];
-  if(n.includes('cheese')) return [20,30,40];
-  if(n.includes('protein') || n.includes('shake') || n.includes('powder') || n.includes('supplement')) return [25,30,40];
-  if(n.includes('oil') || n.includes('butter') || n.includes('sauce') || n.includes('dressing')) return [5,10,15];
-  return [50,100,150,200];
+  // Other
+  if(n.includes('egg'))                          return [55,110,165];
+  if(n.includes('oil') || n.includes('sauce') || n.includes('dressing') || n.includes('mayo')) return [10,15,20];
+  if(n.includes('peanut butter') || n.includes('vegemite') || n.includes('nutella')) return [15,20,30];
+  if(n.includes('chips') || n.includes('crackers') || n.includes('biscuit')) return [25,30,50];
+  return [100,150,200];
 }
 
 function openServPicker(item) {
