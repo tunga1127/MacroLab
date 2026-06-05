@@ -891,7 +891,7 @@ function renderToday(){
     editIdx=-1;save();renderToday();renderTrends();toast('Updated ✓');
   });
 }
-function esc(s){return(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 
 /* ---------------- render trends ---------------- */
 function renderTrends(){
@@ -987,7 +987,22 @@ document.getElementById('importFile').onchange=e=>{
       const data=JSON.parse(r.result);
       if(typeof data!=='object'||data===null)throw new Error('Not a valid backup file');
       // merge days: keep existing, add/restore any from backup not already present
-      const mergedDays=Object.assign({},data.days||{},S.days||{});
+      // Sanitise each day's food items to ensure all fields are the right type
+      const sanitiseFoods = (days) => {
+        const out = {};
+        for(const [k,v] of Object.entries(days||{})) {
+          const foods = (v.foods||[]).map(f=>({
+            name: String(f.name||'Unknown food'),
+            calories: +f.calories||0,
+            protein: +f.protein||0,
+            carbs: +f.carbs||0,
+            fat: +f.fat||0,
+          }));
+          out[k] = {foods};
+        }
+        return out;
+      };
+      const mergedDays=Object.assign({},sanitiseFoods(data.days),sanitiseFoods(S.days));
       // merge weights by date (existing wins on conflict)
       const wmap={};(data.weights||[]).forEach(w=>{if(w&&w.date)wmap[w.date]=w});
       (S.weights||[]).forEach(w=>{if(w&&w.date)wmap[w.date]=w});
