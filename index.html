@@ -121,7 +121,26 @@
   .foodMatch{padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
   .foodMatch:last-child{border-bottom:none}
   .foodMatch:active{background:var(--line)}
-  .foodMatch .fname{font-weight:500}
+  /* meal tabs */
+  .mealtabs{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .mealtabs::-webkit-scrollbar{display:none}
+  .mealtab{padding:7px 14px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;flex-shrink:0}
+  .mealtab.on{background:var(--teal);border-color:var(--teal);color:#06201d}
+  .mealtab:active{transform:scale(.94)}
+  /* meal group headers in food list */
+  .mealgroup{margin-top:10px;margin-bottom:4px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .mealgroup:first-child{margin-top:0}
+  /* star button on food items */
+  .fav-star{background:none;border:none;font-size:14px;cursor:pointer;padding:2px 4px;opacity:0.5}
+  .fav-star.saved{opacity:1}
+  /* favourites list */
+  .favitem{padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px}
+  .favitem:last-child{border-bottom:none}
+  .favitem:active{background:var(--line)}
+  .favitem .fi-name{flex:1;font-weight:500}
+  .favitem .fi-mac{font-size:11px;color:var(--muted)}
+  .favitem .fi-del{background:none;border:none;color:var(--muted);font-size:16px;padding:4px;cursor:pointer}
+    .foodMatch .fname{font-weight:500}
   .foodMatch .fmacro{font-size:11px;color:var(--muted);margin-top:2px}
   .foodMatch .fsrc{font-size:10px;color:var(--faint);margin-top:2px;letter-spacing:.02em}
   .matchsep{padding:6px 12px;font-size:10px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--line);background:var(--surface)}
@@ -392,6 +411,10 @@
       <div class="field"><label>TDEE (kcal burned/day)</label><input type="number" id="tdeeInput" inputmode="numeric">
         <div class="hint">Set from your Garmin weekly average, or let the Import tab fill it. Your flat daily target already averages in your run days.</div>
       </div>
+      <div class="field" style="margin-top:8px">
+        <label>FatSecret Worker URL <span style="font-size:10px;color:var(--muted)">(optional)</span></label>
+        <input type="url" id="fsUrl" placeholder="https://macrolab-fs.yourname.workers.dev">
+      </div>
       <button class="btn" id="saveSettings">Save settings</button>
     </div>
 
@@ -424,6 +447,13 @@
     <div class="sheet-grab"></div>
     <div class="sheet-head"><h3>Add</h3><button class="sheet-x" id="sheetX" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button></div>
 
+    <div class="mealtabs" id="mealTabs">
+      <button class="mealtab on" data-meal="Breakfast">🌅 Breakfast</button>
+      <button class="mealtab" data-meal="Lunch">☀️ Lunch</button>
+      <button class="mealtab" data-meal="Dinner">🌙 Dinner</button>
+      <button class="mealtab" data-meal="Snack">🍎 Snack</button>
+    </div>
+
     <div class="sheet-input">
       <input type="text" id="foodInput" placeholder="Search foods or describe a meal…" enterkeyhint="search">
       <div id="foodMatches" class="foodMatches hidden"></div>
@@ -440,6 +470,9 @@
       </button>
       <button class="tile" id="weightTile">
         <span class="tic"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9z"/><path d="M12 8l3 4H9z"/></svg></span>Weight
+      </button>
+      <button class="tile" id="favTile">
+        <span class="tic"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>Favourites
       </button>
     </div>
 
@@ -459,6 +492,14 @@
         <input type="number" inputmode="decimal" id="wt-kg" placeholder="Weight in kg">
         <button class="addbtn" id="wtSave" style="width:auto;padding:14px 20px">Log</button>
       </div>
+    </div>
+
+    <div id="favPanel" class="panel hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:600">Saved favourites</span>
+        <span style="font-size:11px;color:var(--muted)">Tap to add • Long-press to delete</span>
+      </div>
+      <div id="favList"><div class="empty" style="font-size:12px">No favourites yet.<br>Add food then tap ★ to save it.</div></div>
     </div>
 
     <div id="servPanel" class="servpanel hidden">
@@ -484,7 +525,7 @@
 <script>
 /* ---------------- storage ---------------- */
 const K='macrolab_v1';
-const def={apiKey:'',model:'claude-haiku-4-5-20251001',calGoal:2000,proGoal:117,tdee:2360,days:{},weights:[]};
+const def={apiKey:'',model:'claude-haiku-4-5-20251001',fsWorkerUrl:'',calGoal:2000,proGoal:117,tdee:2360,days:{},weights:[],favourites:[]};
 let S=load();
 
 /* ---- AFCD food database (1500 Australian foods, gzip+base64 compressed) ---- */
@@ -519,31 +560,103 @@ function searchFoods(query) {
     .map(([name, macros]) => ({name, ...macros, source:'afcd'}));
 }
 
-/* ---- Australian branded foods database (embedded, offline, no API needed) ---- */
-let brandedDatabase = null;
-const BRANDEDDB_B64 = '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';
-
-function decompressBrandedDB() {
-  if(brandedDatabase) return brandedDatabase;
-  try {
-    const binary = atob(BRANDEDDB_B64);
-    const bytes = new Uint8Array(binary.length);
-    for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
-    brandedDatabase = JSON.parse(pako.ungzip(bytes, {to:'string'}));
-    return brandedDatabase;
-  } catch(e) { return {}; }
+/* ---- Meal type ---- */
+let currentMeal = 'Breakfast';
+function initMealTabs(){
+  document.querySelectorAll('.mealtab').forEach(btn=>{
+    btn.onclick=()=>{
+      currentMeal=btn.dataset.meal;
+      document.querySelectorAll('.mealtab').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+    };
+  });
+  // Auto-select based on time of day
+  const h=new Date().getHours();
+  const auto = h<10?'Breakfast':h<14?'Lunch':h<18?'Dinner':'Snack';
+  currentMeal=auto;
+  document.querySelectorAll('.mealtab').forEach(b=>{
+    b.classList.toggle('on', b.dataset.meal===auto);
+  });
 }
 
-function searchBranded(query) {
-  if(!query || query.length < 2) return Promise.resolve([]);
-  const db = decompressBrandedDB();
-  const q = query.toLowerCase();
-  return Promise.resolve(
-    Object.entries(db)
-      .filter(([name]) => name.toLowerCase().includes(q))
-      .slice(0,5)
-      .map(([name,macros]) => ({name,...macros,source:'branded',per:'per 100g'}))
-  );
+/* ---- Favourites ---- */
+function getFavs(){return S.favourites||[]}
+function saveFav(item){
+  if(!S.favourites)S.favourites=[];
+  const exists=S.favourites.some(f=>f.name===item.name);
+  if(!exists){S.favourites.push({name:item.name,calories:item.calories,protein:item.protein,carbs:item.carbs,fat:item.fat});save();}
+  return !exists;
+}
+function removeFav(name){
+  if(!S.favourites)return;
+  S.favourites=S.favourites.filter(f=>f.name!==name);
+  save();
+}
+function renderFavs(){
+  const list=document.getElementById('favList');
+  const favs=getFavs();
+  if(!favs.length){list.innerHTML='<div class="empty" style="font-size:12px">No favourites yet.<br>Add food then tap ★ to save it.</div>';return;}
+  list.innerHTML='';
+  favs.forEach(item=>{
+    const el=document.createElement('div');
+    el.className='favitem';
+    el.innerHTML=`<div><div class="fi-name">${esc(item.name)}</div><div class="fi-mac">${item.calories} cal · P${item.protein}g · C${item.carbs}g · F${item.fat}g · per 100g</div></div><button class="fi-del" title="Remove">×</button>`;
+    el.querySelector('.fi-del').onclick=(e)=>{e.stopPropagation();removeFav(item.name);renderFavs();};
+    el.onclick=()=>openServPicker({...item});
+    list.appendChild(el);
+  });
+}
+
+/* ---- FatSecret search (via Cloudflare Worker proxy) ---- */
+async function searchFatSecret(query) {
+  const workerUrl = S.fsWorkerUrl && S.fsWorkerUrl.trim();
+  if(!workerUrl) return [];
+  try {
+    const res = await fetch(`${workerUrl}?q=${encodeURIComponent(query)}&max=6`, {
+      signal: AbortSignal.timeout(5000)
+    });
+    if(!res.ok) return [];
+    const data = await res.json();
+    return (data.results||[]).map(f=>({...f,source:'fatsecret',per:'per 100g'}));
+  } catch(e) {
+    return [];
+  }
+}
+
+/* ---- Claude product lookup — AU branded foods from training data ---- */
+async function searchClaudeProducts(query) {
+  if(!S.apiKey) return [];
+  // Only fire if query looks like a branded product, not a generic food
+  const generic = /^(chicken|beef|rice|egg|milk|bread|water|banana|apple|orange|potato|carrot|broccoli|spinach|pasta|oat|tuna|salmon|pork|lamb|turkey)s?$/i;
+  if(generic.test(query.trim())) return [];
+  try {
+    const sys = `You are a precise Australian nutrition database. The user is searching for a specific branded or packaged food product sold in Australian supermarkets.
+Return up to 4 matching products as a JSON array. No markdown, no prose, just the array.
+Each item: {"name":"Brand — Product Name","calories":number,"protein":number,"carbs":number,"fat":number}
+All values MUST be per 100g (or per 100ml for drinks). Values in kcal and grams.
+CRITICAL: Use the ACTUAL nutrition panel values from the product label, not estimates. If you are not confident in the exact values, do not include that product.
+Focus on: Chobani, Rokeby, Jalna, Pauls, Sanitarium, Uncle Tobys, Carman's, Kellogg's, Weet-Bix, Up&Go, Bega, John West, Don, Hans, Primo, Ingham, McCain, Birds Eye, Tim Tam, Shapes, Kettle, Smith's, Vita-Weat, Vegemite, Heinz, Masterfoods, San Remo, Sunrice, BSc, Musashi, Optimum Nutrition, Quest, My Muscle Chef, Bounce Ball, Clif, Yo Pro, Vaalia, Danone, and other major AU brands.
+Return [] if the query is a generic food (not branded) or if you don't know the exact nutrition values.`;
+    const res = await callClaude([{type:'text',text:`Search: ${query}`}], sys);
+    const clean = res.replace(/```json|```/g,'').trim();
+    const match = clean.match(/\[[\s\S]*\]/);
+    if(!match) return [];
+    const arr = JSON.parse(match[0]);
+    return arr
+      .filter(x=>x.name&&x.calories>0)
+      .map(x=>({
+        name: String(x.name),
+        calories: Math.round(+x.calories||0),
+        protein: Math.round((+x.protein||0)*10)/10,
+        carbs: Math.round((+x.carbs||0)*10)/10,
+        fat: Math.round((+x.fat||0)*10)/10,
+        source: 'claude-product',
+        per: 'per 100g'
+      }))
+      .slice(0,4);
+  } catch(e) {
+    return [];
+  }
 }
 
 /* ---- Unified search: AFCD instant + OFF async ---- */
@@ -573,35 +686,44 @@ async function doFoodSearch(query) {
   const box = document.getElementById('foodMatches');
   if(!query || query.length < 2) { box.classList.add('hidden'); box.innerHTML=''; return; }
 
-  // 1. Show AFCD results immediately
+  // 1. Show AFCD results immediately (offline, instant)
   const afcdResults = searchFoods(query);
   box.innerHTML='';
   box.classList.remove('hidden');
 
   if(afcdResults.length) {
-    const sep=document.createElement('div');sep.className='matchsep';sep.textContent='Australian Foods';box.appendChild(sep);
+    const sep=document.createElement('div');sep.className='matchsep';sep.textContent='🇦🇺 Australian Foods';box.appendChild(sep);
     renderMatchItems(afcdResults, box, true);
   }
 
-  // 2. Append OFF spinner
+  // 2. Show spinner while FatSecret + Claude run in parallel
   const loadEl=document.createElement('div');loadEl.className='match-loading';loadEl.id='off-loading';
-  loadEl.innerHTML='<span class="spin"></span> Searching branded foods…';
+  const hasFatSecret = !!(S.fsWorkerUrl && S.fsWorkerUrl.trim());
+  loadEl.innerHTML=`<span class="spin"></span> Searching ${hasFatSecret?'FatSecret + ':''}branded foods…`;
   box.appendChild(loadEl);
 
-  // 3. Fire OFF search
-  const offResults = await searchBranded(query);
+  // 3. Run FatSecret and Claude product lookup in parallel
+  const [fsResults, claudeResults] = await Promise.all([
+    searchFatSecret(query),
+    searchClaudeProducts(query),
+  ]);
+
   const loader=document.getElementById('off-loading');
   if(loader) loader.remove();
-
-  // Only show if query hasn't changed while we were waiting
   if(query !== lastSearchQuery) return;
 
-  if(offResults.length) {
-    const sep2=document.createElement('div');sep2.className='matchsep';sep2.textContent='Branded & Packaged';box.appendChild(sep2);
-    renderMatchItems(offResults, box, true);
+  // Deduplicate Claude results against FatSecret (by similar name)
+  const fsNames = new Set(fsResults.map(f=>f.name.toLowerCase().slice(0,20)));
+  const dedupedClaude = claudeResults.filter(f=>!fsNames.has(f.name.toLowerCase().slice(0,20)));
+
+  const brandedResults = [...fsResults, ...dedupedClaude];
+
+  if(brandedResults.length) {
+    const sep2=document.createElement('div');sep2.className='matchsep';sep2.textContent='🏪 Branded & Packaged';box.appendChild(sep2);
+    renderMatchItems(brandedResults, box, true);
   }
 
-  if(!afcdResults.length && !offResults.length) {
+  if(!afcdResults.length && !brandedResults.length) {
     box.innerHTML='<div class="match-loading">No matches — try AI estimate below</div>';
   }
 }
@@ -703,8 +825,13 @@ document.getElementById('servAdd').onclick = () => {
     protein:  Math.round(_servItem.protein  * r * 10) / 10,
     carbs:    Math.round(_servItem.carbs    * r * 10) / 10,
     fat:      Math.round(_servItem.fat      * r * 10) / 10,
+    meal:     currentMeal,
   };
   ensureDay(viewDate).foods.push(entry);
+  // offer to save base item (not the sized entry) as favourite
+  if(_servItem.source && !getFavs().some(f=>f.name===_servItem.name)) {
+    saveFav(_servItem);
+  }
   save(); renderToday(); renderTrends();
   _servItem = null;
   closeSheet();
@@ -775,7 +902,8 @@ function parseJSON(txt){const c=txt.replace(/```json|```/g,'').trim();const m=c.
   return obj}
 function fileToB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file)})}
 
-const FOOD_SYS='You are a precise nutrition estimator. The user gives a food description or a photo of a meal. Reply with ONLY a JSON object, no markdown, no prose: {"name":string (short, max 6 words),"calories":number,"protein":number,"carbs":number,"fat":number}. Estimate realistic values for the portion shown or described. Numbers are grams except calories (kcal). If portions are unstated, assume one normal serving.';
+const FOOD_SYS='You are a precise nutrition estimator. The user gives a food description or a photo of a meal. Reply with ONLY a JSON object, no markdown, no prose: {"name":string (short, max 6 words),"calories":number,"protein":number,"carbs":number,"fat":number}. Estimate realistic values for the portion shown or described. Numbers are grams except calories (kcal). If portions are unstated, assume one normal serving. CRITICAL: All energy values MUST be in kcal (calories), never kJ. If you see kJ on a label, divide by 4.184 to convert to kcal. For example, 674 kJ = 161 kcal. Never output a kJ value as if it were kcal.';
+
 
 async function analyzeFoodText(text){
   loading('Estimating macros…');
@@ -858,26 +986,53 @@ function renderToday(){
   const list=document.getElementById('foodList');
   document.getElementById('foodCnt').textContent=day.foods.length+(day.foods.length===1?' item':' items');
   if(!day.foods.length){list.innerHTML='<div class="empty">No food logged yet.<br>Add your first meal below.</div>';editIdx=-1;return}
-  list.innerHTML=day.foods.map((x,i)=>{
-    if(i===editIdx){
-      return `<div class="editrow">
-        <div class="er1"><input type="text" id="ed-name" value="${esc(x.name)}" placeholder="Name"></div>
-        <div class="ermac">
-          <div class="m"><label>CAL</label><input type="number" inputmode="numeric" id="ed-cal" value="${Math.round(x.calories)}"></div>
-          <div class="m"><label>P</label><input type="number" inputmode="numeric" id="ed-p" value="${Math.round(x.protein)}"></div>
-          <div class="m"><label>C</label><input type="number" inputmode="numeric" id="ed-c" value="${Math.round(x.carbs)}"></div>
-          <div class="m"><label>F</label><input type="number" inputmode="numeric" id="ed-f" value="${Math.round(x.fat)}"></div>
-        </div>
-        <div class="erbtns"><button class="sv" data-sv="${i}">Save</button><button class="cx" data-cx="1">Cancel</button></div>
-      </div>`;
-    }
-    return `<div class="food">
-      <div class="nm"><div class="n">${esc(x.name)}</div>
-        <div class="m">P ${Math.round(x.protein)} · C ${Math.round(x.carbs)} · F ${Math.round(x.fat)}</div></div>
-      <div class="cal num">${Math.round(x.calories)}<s>cal</s></div>
-      <button class="edit" data-e="${i}"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
-      <button class="del" data-i="${i}"><svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
-    </div>`}).join('');
+
+  // Group foods by meal type
+  const MEALS=['Breakfast','Lunch','Dinner','Snack'];
+  const groups={};
+  day.foods.forEach((x,i)=>{
+    const m=x.meal||'Other';
+    if(!groups[m])groups[m]=[];
+    groups[m].push({item:x,idx:i});
+  });
+  // Render in meal order
+  const favNames=new Set(getFavs().map(f=>f.name));
+  let html='';
+  const orderedMeals=[...MEALS,'Other'].filter(m=>groups[m]);
+  orderedMeals.forEach(meal=>{
+    const mCalTotal=groups[meal].reduce((s,{item})=>s+(item.calories||0),0);
+    html+=`<div class="mealgroup">${meal} · ${Math.round(mCalTotal)} cal</div>`;
+    groups[meal].forEach(({item:x,idx:i})=>{
+      const isSaved=favNames.has(x.name);
+      if(i===editIdx){
+        html+=`<div class="editrow">
+          <div class="er1"><input type="text" id="ed-name" value="${esc(x.name)}" placeholder="Name"></div>
+          <div class="ermac">
+            <div class="m"><label>CAL</label><input type="number" inputmode="numeric" id="ed-cal" value="${Math.round(x.calories)}"></div>
+            <div class="m"><label>P</label><input type="number" inputmode="numeric" id="ed-p" value="${Math.round(x.protein)}"></div>
+            <div class="m"><label>C</label><input type="number" inputmode="numeric" id="ed-c" value="${Math.round(x.carbs)}"></div>
+            <div class="m"><label>F</label><input type="number" inputmode="numeric" id="ed-f" value="${Math.round(x.fat)}"></div>
+          </div>
+          <div class="erbtns"><button class="sv" data-sv="${i}">Save</button><button class="cx" data-cx="1">Cancel</button></div>
+        </div>`;
+      } else {
+        html+=`<div class="food">
+          <div class="nm"><div class="n">${esc(x.name)}</div>
+            <div class="m">P ${Math.round(x.protein)} · C ${Math.round(x.carbs)} · F ${Math.round(x.fat)}</div></div>
+          <div class="cal num">${Math.round(x.calories)}<s>cal</s></div>
+          <button class="fav-star${isSaved?' saved':''}" data-fi="${i}" title="${isSaved?'Saved':'Save to favourites'}">${isSaved?'★':'☆'}</button>
+          <button class="edit" data-e="${i}"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+          <button class="del" data-i="${i}"><svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+        </div>`;
+      }
+    });
+  });
+  list.innerHTML=html;
+  list.querySelectorAll('.fav-star').forEach(b=>b.onclick=()=>{
+    const x=day.foods[+b.dataset.fi];
+    if(b.classList.contains('saved')){removeFav(x.name);b.classList.remove('saved');b.textContent='☆';}
+    else{saveFav({name:x.name,calories:Math.round(x.calories),protein:Math.round(x.protein*10)/10,carbs:Math.round(x.carbs*10)/10,fat:Math.round(x.fat*10)/10});b.classList.add('saved');b.textContent='★';toast('Saved to favourites ★');}
+  });
   list.querySelectorAll('.del').forEach(b=>b.onclick=()=>{ensureDay(viewDate).foods.splice(+b.dataset.i,1);editIdx=-1;save();renderToday();renderTrends()});
   list.querySelectorAll('.edit').forEach(b=>b.onclick=()=>{editIdx=+b.dataset.e;renderToday()});
   list.querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>{editIdx=-1;renderToday()});
@@ -964,6 +1119,7 @@ function fillSettings(){
   document.getElementById('calGoal').value=S.calGoal;
   document.getElementById('proGoal').value=S.proGoal;
   document.getElementById('tdeeInput').value=S.tdee;
+  document.getElementById('fsUrl').value=S.fsWorkerUrl||'';
 }
 document.getElementById('saveSettings').onclick=()=>{
   S.apiKey=document.getElementById('apiKey').value.trim();
@@ -971,6 +1127,7 @@ document.getElementById('saveSettings').onclick=()=>{
   S.calGoal=+document.getElementById('calGoal').value||1850;
   S.proGoal=+document.getElementById('proGoal').value||117;
   S.tdee=+document.getElementById('tdeeInput').value||2360;
+  S.fsWorkerUrl=document.getElementById('fsUrl').value.trim();
   save();renderToday();renderTrends();toast('Saved ✓');
 };
 document.getElementById('exportData').onclick=()=>{
@@ -1034,6 +1191,8 @@ function closeSheet(){
   document.getElementById('foodMatches').innerHTML='';
   document.getElementById('servPanel').classList.add('hidden');
   document.getElementById('servGrams').value='';
+  document.getElementById('favPanel').classList.add('hidden');
+  document.getElementById('quickPanel').classList.add('hidden');
   lastSearchQuery='';
   _servItem=null;
 }
@@ -1055,7 +1214,7 @@ document.getElementById('weightTile').onclick=()=>{
 async function addFood(){
   const inp=document.getElementById('foodInput');const t=inp.value.trim();if(!t)return;
   inp.value='';inp.blur();
-  try{const r=await analyzeFoodText(t);ensureDay(viewDate).foods.push(r);save();renderToday();renderTrends();closeSheet();toast('Added '+Math.round(r.calories)+' cal ✓')}
+  try{const r=await analyzeFoodText(t);r.meal=currentMeal;ensureDay(viewDate).foods.push(r);save();renderToday();renderTrends();closeSheet();toast('Added '+Math.round(r.calories)+' cal ✓')}
   catch(e){toast(e.message.includes('API')?e.message:'Couldn’t estimate that — try again',1)}
 }
 document.getElementById('addBtn').onclick=addFood;
@@ -1069,7 +1228,7 @@ document.getElementById('foodInput').addEventListener('input',e=>{
 });
 document.getElementById('foodPhoto').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;e.target.value='';
-  try{const r=await analyzeFoodPhoto(f);ensureDay(viewDate).foods.push(r);save();renderToday();renderTrends();closeSheet();toast('Added '+esc(r.name)+' ✓')}
+  try{const r=await analyzeFoodPhoto(f);r.meal=currentMeal;ensureDay(viewDate).foods.push(r);save();renderToday();renderTrends();closeSheet();toast('Added '+esc(r.name)+' ✓')}
   catch(err){toast(err.message.includes('API')?err.message:'Couldn’t read that photo',1)}
 };
 /* quick add (manual macros) */
@@ -1080,7 +1239,7 @@ document.getElementById('qaSave').onclick=()=>{
   const c=+document.getElementById('qa-c').value||0;
   const fat=+document.getElementById('qa-f').value||0;
   if(!cal&&!p&&!c&&!fat){toast('Enter at least one value',1);return}
-  ensureDay(viewDate).foods.push({name,calories:cal,protein:p,carbs:c,fat:fat});
+  ensureDay(viewDate).foods.push({name,calories:cal,protein:p,carbs:c,fat:fat,meal:currentMeal});
   save();renderToday();renderTrends();
   ['qa-name','qa-cal','qa-p','qa-c','qa-f'].forEach(id=>document.getElementById(id).value='');
   closeSheet();toast('Added '+cal+' cal ✓');
@@ -1141,6 +1300,7 @@ document.getElementById('nextDay').onclick=()=>{viewDate=shiftDate(viewDate,1);e
 
 /* ---------------- init ---------------- */
 renderToday();renderTrends();
+initMealTabs();
 if(!S.apiKey)setTimeout(()=>toast('Tap the settings icon to add your API key & get started'),600);
 </script>
 </body>
