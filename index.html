@@ -356,23 +356,48 @@
   </div>
 </section>
 
-<!-- ============ IMPORT ============ -->
-<section id="page-import" class="hidden">
+<!-- ============ FOODS ============ -->
+<section id="page-foods" class="hidden">
   <div class="wrap" style="padding-top:8px">
-    <div class="pageh"><h2>Import</h2><p>Bulk-load foods from CSV, or let Claude read your Garmin & RENPHO screens.</p></div>
+    <div class="pageh"><h2>My Foods</h2><p>Manage saved foods, bulk import, or scan Garmin & RENPHO.</p></div>
+
+    <!-- My Foods management -->
+    <div class="card" id="myFoodsCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="font-size:15px;font-weight:700;margin:0">⭐ Saved foods</h3>
+        <span id="myFoodsCount" style="font-size:12px;color:var(--muted)">0 foods</span>
+      </div>
+      <input type="text" id="myFoodsSearch" placeholder="Filter saved foods…" style="margin-bottom:12px;font-size:13px;padding:10px 12px">
+      <div id="myFoodsList"></div>
+    </div>
+
+    <!-- edit panel (hidden by default) -->
+    <div class="card hidden" id="myFoodsEditCard">
+      <div style="font-size:13px;font-weight:600;color:var(--teal);margin-bottom:12px">Edit food (per 100g)</div>
+      <div style="margin-bottom:8px"><input type="text" id="mfe-name" placeholder="Product name" style="font-size:14px"></div>
+      <div class="ermac" style="margin-bottom:12px">
+        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">CAL</label><input type="number" inputmode="numeric" id="mfe-cal" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">P</label><input type="number" inputmode="numeric" id="mfe-p" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">C</label><input type="number" inputmode="numeric" id="mfe-c" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">F</label><input type="number" inputmode="numeric" id="mfe-f" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">Default serving (g)</label>
+        <input type="number" inputmode="numeric" id="mfe-serving" placeholder="e.g. 17" style="font-size:13px;padding:10px 12px;width:120px">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="addbtn" id="mfeSave" style="flex:1">Save changes</button>
+        <button class="addbtn" id="mfeCancel" style="flex:0 0 auto;background:var(--surface2);color:var(--text);width:auto;padding:14px 16px">Cancel</button>
+      </div>
+    </div>
 
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:4px">
-        <span class="h3ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Bulk import foods (CSV)
+        <span class="h3ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Bulk import (CSV)
       </h3>
       <p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">
-        Upload any CSV with food data — Open Food Facts, MyFitnessPal exports, or your own spreadsheet. The app auto-detects the columns.
+        Upload any CSV — Open Food Facts, MyFitnessPal exports, or your own spreadsheet. Auto-detects columns.
       </p>
-      <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.6">
-        <b style="color:var(--text)">Open Food Facts AU:</b> download from<br>
-        <span style="color:var(--teal);word-break:break-all">world.openfoodfacts.org/data</span><br>
-        → "Australia" → CSV export (filter by country first to keep file small)
-      </div>
       <label class="uploadzone" id="csvZone">
         <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>Tap to upload CSV file
         <input type="file" accept=".csv,text/csv" id="csvFile">
@@ -476,7 +501,7 @@
   <button data-pg="today" class="on"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>Today</button>
   <button data-pg="trends"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span>Trends</button>
   <button id="fabBtn" class="fab" aria-label="Add"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-  <button data-pg="import"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>Import</button>
+  <button data-pg="foods"><span class="ic"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg></span>Data</button>
   <button data-pg="settings"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings</button>
 </nav>
 
@@ -849,8 +874,19 @@ function openServPicker(item) {
   const inputEl = document.getElementById('servGrams');
   inputEl.placeholder = drink ? '250' : '100';
 
-  // Build presets with correct unit label
-  const presets = getPresets(item.name);
+  // Use scanned servingSuggestions if available, otherwise fall back to name-based presets
+  // Also include the actual serve size as the first/default option if present
+  let presets;
+  if (item.servingSuggestions && item.servingSuggestions.length) {
+    presets = item.servingSuggestions.map(Number).filter(v => v > 0);
+  } else if (item.defaultServing) {
+    const dflt = Number(item.defaultServing);
+    const named = getPresets(item.name);
+    presets = [dflt, ...named.filter(v => v !== dflt)];
+  } else {
+    presets = getPresets(item.name);
+  }
+
   const presetsEl = document.getElementById('servPresets');
   presetsEl.innerHTML = '';
   presets.forEach((v,idx) => {
@@ -866,7 +902,7 @@ function openServPicker(item) {
     presetsEl.appendChild(b);
   });
 
-  // Default to first preset
+  // Default to first preset (actual serve size if from label)
   const defaultV = presets[0];
   inputEl.value = defaultV;
   presetsEl.children[0]?.classList.add('on');
@@ -1056,8 +1092,9 @@ async function scanNutritionLabel(file) {
     'STEP 2 — Find the nutrient values: could be per serve, per 100g, or both columns. ' +
     'STEP 3 — Convert to per 100g: if you only have per-serve values, multiply by (100 / serve_size_in_grams). Example: 30g serve with 113 kcal → per 100g = 113/30*100 = 377 kcal. ' +
     'STEP 4 — Energy MUST be in kcal. If label shows kJ, divide by 4.184. Never output kJ as if it were kcal. ' +
-    'STEP 5 — suggest 2-3 realistic serving sizes for this product type (e.g. [30,40] for protein powder, [170,200] for yoghurt, [65] for a bar). ' +
-    'Return ONLY JSON: {"name":string,"calories":number,"protein":number,"carbs":number,"fat":number,"servingSuggestions":[numbers]} ' +
+    'STEP 5 — Set defaultServing to the actual serve size in grams from the label (e.g. 17 for a 17g slice, 30 for a 30g scoop). ' +
+    'STEP 6 — suggest 2-3 realistic serving sizes starting with the actual serve size (e.g. [17,34] for a 17g slice, [30,40] for protein powder). ' +
+    'Return ONLY JSON: {"name":string,"calories":number,"protein":number,"carbs":number,"fat":number,"defaultServing":number,"servingSuggestions":[numbers]} ' +
     'No markdown, no prose, no explanation.';
   const out = await callClaude([
     {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},
@@ -1601,12 +1638,94 @@ document.getElementById('renphoFile').onchange=async e=>{
 
 /* ---------------- nav ---------------- */
 function nav(pg){
-  ['today','trends','import','settings'].forEach(p=>document.getElementById('page-'+p).classList.toggle('hidden',p!==pg));
+  ['today','trends','foods','settings'].forEach(p=>document.getElementById('page-'+p).classList.toggle('hidden',p!==pg));
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.pg===pg));
   if(pg==='trends')renderTrends();if(pg==='settings')fillSettings();
+  if(pg==='foods')renderMyFoods();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('nav button[data-pg]').forEach(b=>b.onclick=()=>nav(b.dataset.pg));
+
+/* ---------------- My Foods management ---------------- */
+let _editingFoodIdx = -1;
+
+function renderMyFoods(filter='') {
+  const foods = S.customFoods || [];
+  const q = filter.toLowerCase();
+  const filtered = q ? foods.filter(f => f.name.toLowerCase().includes(q)) : foods;
+  const countEl = document.getElementById('myFoodsCount');
+  const listEl = document.getElementById('myFoodsList');
+  if (countEl) countEl.textContent = foods.length + ' food' + (foods.length !== 1 ? 's' : '');
+  if (!listEl) return;
+  if (!filtered.length) {
+    listEl.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px 0">${q ? 'No matches' : 'No saved foods yet.<br>Scan a label to add your first food.'}</div>`;
+    return;
+  }
+  listEl.innerHTML = '';
+  filtered.forEach((food, idx) => {
+    const realIdx = foods.indexOf(food);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);gap:10px';
+    row.innerHTML = `
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(food.name)}</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:2px">${food.calories} cal · P ${food.protein}g · C ${food.carbs}g · F ${food.fat}g · per 100g${food.defaultServing ? ' · serve '+food.defaultServing+'g' : ''}</div>
+      </div>
+      <button style="padding:7px 12px;border-radius:8px;background:var(--surface2);color:var(--text);font-size:12px;font-weight:600;flex-shrink:0" data-edit="${realIdx}">Edit</button>
+      <button style="padding:7px 12px;border-radius:8px;background:rgba(255,80,80,.15);color:#ff8080;font-size:12px;font-weight:600;flex-shrink:0" data-del="${realIdx}">Delete</button>
+    `;
+    row.querySelector('[data-edit]').onclick = () => openMyFoodEdit(realIdx);
+    row.querySelector('[data-del]').onclick = () => {
+      if (!confirm('Delete "' + food.name + '"?')) return;
+      S.customFoods.splice(realIdx, 1);
+      save(); renderMyFoods(document.getElementById('myFoodsSearch').value);
+      toast('Deleted ✓');
+    };
+    listEl.appendChild(row);
+  });
+}
+
+function openMyFoodEdit(idx) {
+  _editingFoodIdx = idx;
+  const food = S.customFoods[idx];
+  document.getElementById('mfe-name').value = food.name;
+  document.getElementById('mfe-cal').value = food.calories;
+  document.getElementById('mfe-p').value = food.protein;
+  document.getElementById('mfe-c').value = food.carbs;
+  document.getElementById('mfe-f').value = food.fat;
+  document.getElementById('mfe-serving').value = food.defaultServing || '';
+  document.getElementById('myFoodsEditCard').classList.remove('hidden');
+  document.getElementById('myFoodsEditCard').scrollIntoView({behavior:'smooth'});
+}
+
+document.getElementById('mfeSave').onclick = () => {
+  if (_editingFoodIdx < 0) return;
+  const name = document.getElementById('mfe-name').value.trim();
+  if (!name) { toast('Enter a name', 1); return; }
+  S.customFoods[_editingFoodIdx] = {
+    ...S.customFoods[_editingFoodIdx],
+    name,
+    calories: +document.getElementById('mfe-cal').value || 0,
+    protein:  +document.getElementById('mfe-p').value   || 0,
+    carbs:    +document.getElementById('mfe-c').value   || 0,
+    fat:      +document.getElementById('mfe-f').value   || 0,
+    defaultServing: +document.getElementById('mfe-serving').value || undefined,
+  };
+  save();
+  document.getElementById('myFoodsEditCard').classList.add('hidden');
+  _editingFoodIdx = -1;
+  renderMyFoods(document.getElementById('myFoodsSearch').value);
+  toast('Saved ✓');
+};
+
+document.getElementById('mfeCancel').onclick = () => {
+  document.getElementById('myFoodsEditCard').classList.add('hidden');
+  _editingFoodIdx = -1;
+};
+
+document.getElementById('myFoodsSearch').addEventListener('input', e => {
+  renderMyFoods(e.target.value.trim());
+});
 document.getElementById('prevDay').onclick=()=>{viewDate=shiftDate(viewDate,-1);editIdx=-1;renderToday()};
 document.getElementById('nextDay').onclick=()=>{viewDate=shiftDate(viewDate,1);editIdx=-1;renderToday()};
 
