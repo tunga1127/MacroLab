@@ -958,10 +958,20 @@ function addFoodFromDB(item) {
 }
 
 function load(){try{return Object.assign({},def,JSON.parse(localStorage.getItem(K)||'{}'))}catch(e){return Object.assign({},def)}}
+
+function hasRealData(state) {
+  const s = state || S;
+  const days = Object.values(s.days || {});
+  const hasFoodLogs = days.some(d => d.foods && d.foods.length > 0);
+  const hasCustom = (s.customFoods || []).length > 0;
+  const hasWeights = (s.weights || []).length > 0;
+  return hasFoodLogs || hasCustom || hasWeights;
+}
+
 function save(){
   try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('Storage blocked — host the file to enable saving',1)}
-  // push to Supabase in background (don't await)
-  sbPush().catch(()=>{});
+  // Only push to Supabase if we have real data — never overwrite cloud with empty state
+  if(hasRealData()) sbPush().catch(()=>{});
 }
 
 /* ---------------- date helpers ---------------- */
@@ -1336,12 +1346,21 @@ document.getElementById('sbConnect').onclick=async()=>{
   const result=await sbSetup(url,key);
   if(!result.ok){statusEl.textContent='❌ '+result.msg;toast(result.msg,1);return;}
   S.sbUrl=url;S.sbKey=key;S.sbUsername=username;
-  save();
+  localStorage.setItem(K,JSON.stringify(S)); // save credentials locally first without triggering push
   statusEl.textContent='⏳ Looking for your data…';
   const pulled=await sbPull();
   fillSettings();renderToday();renderTrends();
-  if(pulled){statusEl.textContent='✓ Connected as "'+username+'" — data restored';toast('Data restored ✓');}
-  else{statusEl.textContent='✓ Connected as "'+username+'" — saving data now';await sbPush();toast('Connected to Supabase ✓');}
+  if(pulled){
+    statusEl.textContent='✓ Connected as "'+username+'" — data restored';
+    toast('Data restored ✓');
+  } else if(hasRealData()){
+    statusEl.textContent='✓ Connected as "'+username+'" — saving your data now';
+    await sbPush();
+    toast('Connected & data backed up ✓');
+  } else {
+    statusEl.textContent='✓ Connected as "'+username+'"';
+    toast('Connected to Supabase ✓');
+  }
 };
 document.getElementById('saveSettings').onclick=()=>{
   S.apiKey=document.getElementById('apiKey').value.trim();
@@ -1732,9 +1751,22 @@ document.getElementById('nextDay').onclick=()=>{viewDate=shiftDate(viewDate,1);e
 /* ---------------- init ---------------- */
 renderToday();renderTrends();
 initMealTabs();
-// On startup, if Supabase is configured, pull latest data from cloud
-if(S.sbUrl && S.sbKey){
-  sbPull().then(pulled=>{if(pulled){renderToday();renderTrends();toast('Synced from cloud ✓');}}).catch(()=>{});
+
+// Safe startup sync:
+// 1. Always pull from Supabase first if connected
+// 2. Only push local data if cloud had nothing AND local has real data
+// 3. Never push empty/default state that could wipe real cloud data
+if(S.sbUrl && S.sbKey && S.sbUsername){
+  sbPull().then(pulled => {
+    if(pulled){
+      renderToday();renderTrends();
+      toast('Synced from cloud ✓');
+    } else if(hasRealData()) {
+      // Cloud row is empty but we have local data — push it up
+      sbPush().catch(()=>{});
+      toast('Data backed up to cloud ✓');
+    }
+  }).catch(()=>{});
 }
 if(!S.apiKey&&!S.sbUrl)setTimeout(()=>toast('Go to Settings to connect Supabase & add your API key'),600);
 </script>
