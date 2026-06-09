@@ -84,15 +84,18 @@
   .seclabel{display:flex;align-items:center;justify-content:space-between;padding:6px 4px 12px}
   .seclabel h3{font-size:15px;font-weight:700;letter-spacing:-.01em}
   .seclabel .cnt{color:var(--faint);font-size:13px}
-  .food{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
-  .food:last-child{border-bottom:none}
+  .food-wrap{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+  .food-wrap:last-child{border-bottom:none}
+  .food-actions{position:absolute;right:0;top:0;bottom:0;display:flex;align-items:stretch}
+  .food-actions button{display:flex;align-items:center;justify-content:center;width:72px;font-size:12px;font-weight:700;border:none;cursor:pointer}
+  .food-actions .fa-edit{background:#2a5298;color:#fff}
+  .food-actions .fa-del{background:#c0392b;color:#fff}
+  .food{display:flex;align-items:center;gap:12px;padding:13px 0;background:var(--surface);position:relative;transition:transform 0.25s ease;will-change:transform;touch-action:pan-y}
   .food .nm{flex:1;min-width:0}
   .food .nm .n{font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .food .nm .m{font-size:12px;color:var(--muted);margin-top:2px}
   .food .cal{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px}
   .food .cal s{font-size:11px;color:var(--faint);font-weight:400;text-decoration:none;margin-left:1px}
-  .food .del{color:var(--faint);padding:4px 5px;margin-right:-4px;display:grid;place-items:center}
-  .food .del svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
   .empty{text-align:center;color:var(--faint);padding:30px 10px;font-size:14px}
 
   /* shared add button */
@@ -1158,6 +1161,65 @@ async function readRenpho(file){
   return o;
 }
 
+/* ---------------- swipe to reveal ---------------- */
+const SWIPE_WIDTH = 144; // 2 buttons × 72px
+let _activeSwipe = null;
+
+function addSwipeHandlers(container) {
+  container.querySelectorAll('.food-wrap').forEach(wrap => {
+    const inner = wrap.querySelector('.food');
+    let startX, startY, dx = 0, open = false, tracking = false;
+
+    inner.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dx = 0; tracking = false;
+    }, {passive:true});
+
+    inner.addEventListener('touchmove', e => {
+      const mx = e.touches[0].clientX - startX;
+      const my = e.touches[0].clientY - startY;
+      if (!tracking) {
+        if (Math.abs(mx) < Math.abs(my)) return; // vertical scroll — ignore
+        tracking = true;
+        // close any other open row
+        if (_activeSwipe && _activeSwipe !== inner) {
+          _activeSwipe.style.transform = 'translateX(0)';
+          _activeSwipe = null;
+        }
+      }
+      dx = open ? Math.min(0, mx - SWIPE_WIDTH) : Math.min(0, mx);
+      dx = Math.max(-SWIPE_WIDTH, dx);
+      inner.style.transition = 'none';
+      inner.style.transform = `translateX(${dx}px)`;
+    }, {passive:true});
+
+    inner.addEventListener('touchend', () => {
+      if (!tracking) return;
+      inner.style.transition = 'transform 0.25s ease';
+      if (dx < -SWIPE_WIDTH / 2) {
+        inner.style.transform = `translateX(-${SWIPE_WIDTH}px)`;
+        open = true;
+        _activeSwipe = inner;
+      } else {
+        inner.style.transform = 'translateX(0)';
+        open = false;
+        if (_activeSwipe === inner) _activeSwipe = null;
+      }
+    });
+
+    // Tap on row body closes it if open
+    inner.addEventListener('click', () => {
+      if (open) {
+        inner.style.transition = 'transform 0.25s ease';
+        inner.style.transform = 'translateX(0)';
+        open = false;
+        _activeSwipe = null;
+      }
+    });
+  });
+}
+
 /* ---------------- render today ---------------- */
 function renderToday(){
   document.getElementById('dayLabel').textContent=dayLabel(viewDate);
@@ -1225,13 +1287,17 @@ function renderToday(){
           <div class="erbtns"><button class="sv" data-sv="${i}">Save</button><button class="cx" data-cx="1">Cancel</button></div>
         </div>`;
       } else {
-        html+=`<div class="food">
-          <div class="nm"><div class="n">${esc(x.name)}</div>
-            <div class="m">P ${Math.round(x.protein)} · C ${Math.round(x.carbs)} · F ${Math.round(x.fat)}</div></div>
-          <div class="cal num">${Math.round(x.calories)}<s>cal</s></div>
-          <button class="fav-star${isSaved?' saved':''}" data-fi="${i}" title="${isSaved?'Saved':'Save to favourites'}">${isSaved?'★':'☆'}</button>
-          <button class="edit" data-e="${i}"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
-          <button class="del" data-i="${i}"><svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button>
+        html+=`<div class="food-wrap" data-fi="${i}">
+          <div class="food-actions">
+            <button class="fa-edit" data-e="${i}">Edit</button>
+            <button class="fa-del" data-i="${i}">Delete</button>
+          </div>
+          <div class="food">
+            <div class="nm"><div class="n">${esc(x.name)}</div>
+              <div class="m">P ${Math.round(x.protein)} · C ${Math.round(x.carbs)} · F ${Math.round(x.fat)}</div></div>
+            <div class="cal num">${Math.round(x.calories)}<s>cal</s></div>
+            <button class="fav-star${isSaved?' saved':''}" data-fi="${i}" title="${isSaved?'Saved':'Save to favourites'}">${isSaved?'★':'☆'}</button>
+          </div>
         </div>`;
       }
     });
@@ -1242,8 +1308,8 @@ function renderToday(){
     if(b.classList.contains('saved')){removeFav(x.name);b.classList.remove('saved');b.textContent='☆';}
     else{saveFav({name:x.name,calories:Math.round(x.calories),protein:Math.round(x.protein*10)/10,carbs:Math.round(x.carbs*10)/10,fat:Math.round(x.fat*10)/10});b.classList.add('saved');b.textContent='★';toast('Saved to favourites ★');}
   });
-  list.querySelectorAll('.del').forEach(b=>b.onclick=()=>{ensureDay(viewDate).foods.splice(+b.dataset.i,1);editIdx=-1;save();renderToday();renderTrends()});
-  list.querySelectorAll('.edit').forEach(b=>b.onclick=()=>{editIdx=+b.dataset.e;renderToday()});
+  list.querySelectorAll('.fa-del').forEach(b=>b.onclick=()=>{ensureDay(viewDate).foods.splice(+b.dataset.i,1);editIdx=-1;save();renderToday();renderTrends()});
+  list.querySelectorAll('.fa-edit').forEach(b=>b.onclick=()=>{editIdx=+b.dataset.e;renderToday()});
   list.querySelectorAll('[data-cx]').forEach(b=>b.onclick=()=>{editIdx=-1;renderToday()});
   list.querySelectorAll('[data-sv]').forEach(b=>b.onclick=()=>{
     const i=+b.dataset.sv;const it=ensureDay(viewDate).foods[i];
@@ -1254,6 +1320,8 @@ function renderToday(){
     it.fat=+document.getElementById('ed-f').value||0;
     editIdx=-1;save();renderToday();renderTrends();toast('Updated ✓');
   });
+  // Swipe to reveal edit/delete
+  addSwipeHandlers(list);
 }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 
