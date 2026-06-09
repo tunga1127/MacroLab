@@ -353,7 +353,26 @@
 <!-- ============ IMPORT ============ -->
 <section id="page-import" class="hidden">
   <div class="wrap" style="padding-top:8px">
-    <div class="pageh"><h2>Import screenshots</h2><p>Let Claude read your Garmin & RENPHO screens so you don't type numbers.</p></div>
+    <div class="pageh"><h2>Import</h2><p>Bulk-load foods from CSV, or let Claude read your Garmin & RENPHO screens.</p></div>
+
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:4px">
+        <span class="h3ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Bulk import foods (CSV)
+      </h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">
+        Upload any CSV with food data — Open Food Facts, MyFitnessPal exports, or your own spreadsheet. The app auto-detects the columns.
+      </p>
+      <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.6">
+        <b style="color:var(--text)">Open Food Facts AU:</b> download from<br>
+        <span style="color:var(--teal);word-break:break-all">world.openfoodfacts.org/data</span><br>
+        → "Australia" → CSV export (filter by country first to keep file small)
+      </div>
+      <label class="uploadzone" id="csvZone">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>Tap to upload CSV file
+        <input type="file" accept=".csv,text/csv" id="csvFile">
+      </label>
+      <div id="csvResult"></div>
+    </div>
 
     <div class="card">
       <h3 style="font-size:15px;font-weight:700;margin-bottom:4px"><span class="h3ic"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>Garmin — TDEE</h3>
@@ -1437,7 +1456,108 @@ document.getElementById('wtSave').onclick=()=>{
   closeSheet();toast('Weight logged: '+kg+'kg ✓');
 };
 
-/* ---------------- import ---------------- */
+/* ---------------- CSV bulk import ---------------- */
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  // Auto-detect delimiter — OFF uses tabs, most others use commas
+  const delim = lines[0].includes('\t') ? '\t' : ',';
+  function splitLine(line) {
+    if (delim === '\t') return line.split('\t').map(v => v.trim());
+    const result = []; let cur = ''; let inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQuote = !inQuote; }
+      else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    result.push(cur.trim());
+    return result;
+  }
+  const headers = splitLine(lines[0]).map(h => h.replace(/^"|"$/g,'').toLowerCase().trim());
+
+  // Column name aliases — handles OFF, MFP, generic spreadsheets
+  function findCol(aliases) {
+    for (const a of aliases) {
+      const idx = headers.findIndex(h => h.includes(a));
+      if (idx >= 0) return idx;
+    }
+    return -1;
+  }
+  const cols = {
+    name:    findCol(['product_name','name','food','item','description']),
+    cal:     findCol(['energy_kcal_100g','energy-kcal_100g','calories_100g','kcal_100g','calories','kcal','energy_kcal']),
+    calKj:   findCol(['energy_kj_100g','energy-kj_100g','kj_100g','energy_kj','energy (kj)']),
+    protein: findCol(['proteins_100g','protein_100g','protein','proteins']),
+    carbs:   findCol(['carbohydrates_100g','carbohydrates_g_100g','carbohydrates','carbs','carbs_100g']),
+    fat:     findCol(['fat_100g','total_fat_100g','fat','fats']),
+  };
+
+  if (cols.name < 0) return null; // can't identify food names
+
+  const foods = [];
+  for (let i = 1; i < lines.length; i++) {
+    const row = splitLine(lines[i]).map(v => v.replace(/^"|"$/g,'').trim());
+    const name = row[cols.name];
+    if (!name || name.length < 2) continue;
+
+    let cal = cols.cal >= 0 ? parseFloat(row[cols.cal]) : NaN;
+    // fallback: convert kJ to kcal
+    if (isNaN(cal) && cols.calKj >= 0) {
+      const kj = parseFloat(row[cols.calKj]);
+      if (!isNaN(kj)) cal = Math.round(kj / 4.184);
+    }
+    const protein = cols.protein >= 0 ? parseFloat(row[cols.protein]) : NaN;
+    const carbs   = cols.carbs   >= 0 ? parseFloat(row[cols.carbs])   : NaN;
+    const fat     = cols.fat     >= 0 ? parseFloat(row[cols.fat])     : NaN;
+
+    // Skip rows with no usable nutrition data
+    if (isNaN(cal) && isNaN(protein)) continue;
+
+    foods.push({
+      name: name.slice(0, 80), // cap length
+      calories: isNaN(cal)     ? 0 : Math.round(cal),
+      protein:  isNaN(protein) ? 0 : Math.round(protein * 10) / 10,
+      carbs:    isNaN(carbs)   ? 0 : Math.round(carbs   * 10) / 10,
+      fat:      isNaN(fat)     ? 0 : Math.round(fat     * 10) / 10,
+      source: 'csv'
+    });
+  }
+  return foods;
+}
+
+document.getElementById('csvFile').onchange = e => {
+  const f = e.target.files[0]; if (!f) return; e.target.value = '';
+  const box = document.getElementById('csvResult');
+  box.innerHTML = '<div style="color:var(--muted);font-size:13px;margin-top:8px"><span class="spin"></span> Reading CSV…</div>';
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const foods = parseCSV(reader.result);
+      if (foods === null) { box.innerHTML = '<div style="color:#ffb4b4;font-size:12.5px;margin-top:8px">⚠ Could not find a "name" or "product_name" column. Check your CSV headers.</div>'; return; }
+      if (!foods.length) { box.innerHTML = '<div style="color:#ffb4b4;font-size:12.5px;margin-top:8px">⚠ No valid food rows found.</div>'; return; }
+
+      // Merge into customFoods — skip duplicates by name
+      if (!S.customFoods) S.customFoods = [];
+      let added = 0, skipped = 0;
+      foods.forEach(food => {
+        const exists = S.customFoods.some(cf => cf.name.toLowerCase() === food.name.toLowerCase());
+        if (exists) { skipped++; } else { S.customFoods.push(food); added++; }
+      });
+      save();
+      box.innerHTML = `<div style="margin-top:10px;padding:12px;background:var(--surface2);border-radius:10px;font-size:13px">
+        <div style="color:var(--teal);font-weight:600;margin-bottom:4px">✓ Import complete</div>
+        <div style="color:var(--muted)">${added} foods added · ${skipped} duplicates skipped</div>
+        <div style="color:var(--faint);font-size:11px;margin-top:4px">Search for them in the Add sheet under ⭐ My Foods</div>
+      </div>`;
+      toast(added + ' foods imported ✓');
+    } catch(err) {
+      box.innerHTML = '<div style="color:#ffb4b4;font-size:12.5px;margin-top:8px">⚠ Failed to parse CSV: ' + esc(err.message) + '</div>';
+    }
+  };
+  reader.onerror = () => { box.innerHTML = '<div style="color:#ffb4b4;font-size:12.5px;margin-top:8px">⚠ Could not read file.</div>'; };
+  reader.readAsText(f, 'UTF-8');
+};
 document.getElementById('garminFile').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;e.target.value='';
   const box=document.getElementById('garminResult');
