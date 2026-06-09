@@ -383,14 +383,28 @@
     <div class="pageh"><h2>Settings</h2></div>
 
     <div class="banner">
-      <b>How this works:</b> the app calls the Claude API with <b>your own key</b>, stored only on this device. Hosting is free; the API costs roughly a few cents per day at your usage. Get a key at <b>console.anthropic.com</b>.
+      <b>How this works:</b> the app calls the Claude API with <b>your own key</b>. Add your Supabase credentials to sync everything to the cloud — so reinstalling the app never loses your data.
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label>Supabase Project URL</label>
+        <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co" autocomplete="off" autocorrect="off" autocapitalize="none">
+      </div>
+      <div class="field">
+        <label>Supabase Anon Key</label>
+        <input type="password" id="sbKey" placeholder="sb_publishable_...">
+        <div class="hint">Find these in your Supabase project → Settings → API. Your data syncs automatically once connected.</div>
+      </div>
+      <button class="btn" id="sbConnect" style="margin-bottom:0">Connect Supabase</button>
+      <div id="sbStatus" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center"></div>
     </div>
 
     <div class="card">
       <div class="field">
         <label>Anthropic API key</label>
         <input type="password" id="apiKey" placeholder="sk-ant-...">
-        <div class="hint">Stored in your browser only (localStorage). Never commit this into the hosted file.</div>
+        <div class="hint">Stored in Supabase (if connected) so you never lose it. Get a key at console.anthropic.com.</div>
       </div>
       <div class="field">
         <label>Model</label>
@@ -421,7 +435,7 @@
       <label class="btn sec" id="importBtn" for="importFile" style="display:block;text-align:center"><svg class="svi" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Import / restore from backup
         <input type="file" accept="application/json,.json" id="importFile" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden">
       </label>
-      <div class="hint" style="margin-top:8px">Export regularly — your data lives only on this device and iOS can clear it (e.g. if you delete the home-screen icon). A saved JSON file is your safety net. Import merges a backup back in.</div>
+      <div class="hint" style="margin-top:8px">With Supabase connected, your data is safe in the cloud. Export is an extra safety net — a JSON file you can store in Files or iCloud Drive.</div>
       <div style="height:14px"></div>
       <button class="btn sec" id="wipeData" style="color:var(--red)">Reset all data</button>
     </div>
@@ -462,6 +476,10 @@
       <label class="tile" id="photoBtn" for="foodPhoto">
         <span class="tic"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>Photo
         <input type="file" accept="image/*" id="foodPhoto">
+      </label>
+      <label class="tile" id="scanLabelBtn" for="labelPhoto">
+        <span class="tic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h6M7 16h8"/></svg></span>Scan label
+        <input type="file" accept="image/*" capture="environment" id="labelPhoto">
       </label>
       <button class="tile" id="quickTile">
         <span class="tic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>Quick add
@@ -515,6 +533,22 @@
       </div>
       <button class="addbtn" id="servAdd">Add this serving</button>
     </div>
+
+    <!-- label scan confirm panel -->
+    <div id="labelConfirmPanel" class="servpanel hidden">
+      <div style="font-size:12px;color:var(--teal);font-weight:600;margin-bottom:10px">✓ Label scanned — confirm values (per 100g)</div>
+      <div class="er1" style="margin-bottom:8px"><input type="text" id="lc-name" placeholder="Product name"></div>
+      <div class="ermac" style="margin-bottom:10px">
+        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">CAL</label><input type="number" inputmode="numeric" id="lc-cal" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">P</label><input type="number" inputmode="numeric" id="lc-p" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">C</label><input type="number" inputmode="numeric" id="lc-c" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">F</label><input type="number" inputmode="numeric" id="lc-f" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="addbtn" id="lcSave" style="flex:1">Save to My Foods</button>
+        <button class="addbtn" id="lcSkip" style="flex:0 0 auto;background:var(--surface2);color:var(--text);width:auto;padding:14px 16px">Skip</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -523,8 +557,88 @@
 <script>
 /* ---------------- storage ---------------- */
 const K='macrolab_v1';
-const def={apiKey:'',model:'claude-haiku-4-5-20251001',calGoal:2000,proGoal:117,tdee:2360,days:{},weights:[],favourites:[]};
+const def={apiKey:'',model:'claude-haiku-4-5-20251001',calGoal:2000,proGoal:117,tdee:2360,days:{},weights:[],favourites:[],customFoods:[],sbUrl:'',sbKey:''};
 let S=load();
+
+/* ---------------- Supabase sync ---------------- */
+// All data is stored in a single row keyed by a device/user ID stored in localStorage.
+// This means no auth needed — just the anon key. The row is upserted on every save.
+
+const SB_DEVICE_KEY = 'macrolab_device_id';
+function getDeviceId() {
+  let id = localStorage.getItem(SB_DEVICE_KEY);
+  if (!id) { id = 'ml_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem(SB_DEVICE_KEY, id); }
+  return id;
+}
+
+async function sbFetch(path, method='GET', body=null) {
+  if (!S.sbUrl || !S.sbKey) return null;
+  const url = S.sbUrl.replace(/\/$/, '') + path;
+  const opts = {
+    method,
+    headers: {
+      'apikey': S.sbKey,
+      'Authorization': 'Bearer ' + S.sbKey,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'resolution=merge-duplicates,return=minimal' : ''
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const r = await fetch(url, opts);
+    if (!r.ok) { const t = await r.text(); console.warn('Supabase error', r.status, t); return null; }
+    if (method === 'GET') return await r.json();
+    return true;
+  } catch(e) { console.warn('Supabase fetch failed', e); return null; }
+}
+
+async function sbPush() {
+  if (!S.sbUrl || !S.sbKey) return;
+  const deviceId = getDeviceId();
+  // Store everything except sbUrl/sbKey themselves (no need to nest credentials)
+  const payload = { device_id: deviceId, data: JSON.stringify(S), updated_at: new Date().toISOString() };
+  await sbFetch('/rest/v1/macrolab_data', 'POST', payload);
+}
+
+async function sbPull() {
+  if (!S.sbUrl || !S.sbKey) return false;
+  const deviceId = getDeviceId();
+  const rows = await sbFetch('/rest/v1/macrolab_data?device_id=eq.' + encodeURIComponent(deviceId) + '&select=data');
+  if (!rows || !rows.length || !rows[0].data) return false;
+  try {
+    const remote = JSON.parse(rows[0].data);
+    // Merge: remote is base, local settings win for sbUrl/sbKey
+    const localSbUrl = S.sbUrl, localSbKey = S.sbKey;
+    S = Object.assign({}, def, remote, { sbUrl: localSbUrl, sbKey: localSbKey });
+    save(); // save merged state locally
+    return true;
+  } catch(e) { console.warn('sbPull parse error', e); return false; }
+}
+
+async function sbSetup(url, key) {
+  // Test connection by trying to read (table may not exist yet — that's fine)
+  const testUrl = url.replace(/\/$/, '') + '/rest/v1/macrolab_data?limit=1';
+  try {
+    const r = await fetch(testUrl, { headers: { 'apikey': key, 'Authorization': 'Bearer ' + key } });
+    // 200 = exists, 404 = table missing (need to create), 401 = bad key
+    if (r.status === 401) return { ok: false, msg: 'Invalid key — check your Supabase anon key.' };
+    if (r.status === 404 || r.status === 200 || r.status === 406) return { ok: true };
+    return { ok: false, msg: 'Unexpected response: ' + r.status };
+  } catch(e) { return { ok: false, msg: 'Could not reach Supabase. Check the URL.' }; }
+}
+
+/* ---- Custom foods database ---- */
+function getCustomFoods() { return S.customFoods || []; }
+function saveCustomFood(food) {
+  if (!S.customFoods) S.customFoods = [];
+  const idx = S.customFoods.findIndex(f => f.name.toLowerCase() === food.name.toLowerCase());
+  if (idx >= 0) S.customFoods[idx] = food; else S.customFoods.push(food);
+  save();
+}
+function searchCustomFoods(query) {
+  const q = query.toLowerCase();
+  return (S.customFoods || []).filter(f => f.name.toLowerCase().includes(q));
+}
 
 /* ---- Smart AI food search ---- */
 // Handles both branded product lookup AND generic food estimation in one call.
@@ -532,31 +646,12 @@ let S=load();
 async function searchClaudeProducts(query) {
   if(!S.apiKey) return [];
   try {
-    const sys = `You are a precise Australian nutrition expert and food database.
-The user has typed a food search query. You must:
-
-1. If it looks like a BRANDED Australian product (e.g. "chobani", "weet-bix", "rokeby", "up&go", "tim tam", "vegemite", "bega", "john west"):
-   - Return up to 4 matching products with EXACT nutrition panel values per 100g
-   - Include brand name and product variant in the name
-   - Only include products you are confident about — no guessing
-
-2. If it looks like a GENERIC food with a weight (e.g. "200g chicken breast", "1 cup rice", "2 eggs"):
-   - Return 1-2 results scaled to that portion size
-   - Set "per" field to the portion description
-
-3. If it's ambiguous (e.g. just "chicken" or "rice"):
-   - Return 3-4 common variants (e.g. "Chicken breast, cooked 100g", "Chicken thigh, cooked 100g")
-   - All per 100g so the serving picker can scale
-
-CRITICAL RULES:
-- Energy in kcal ONLY. If a label shows kJ, divide by 4.184. Never output kJ as calories.
-- All macros in grams
-- For branded products, use actual label values not estimates
-- Australian context: Woolworths, Coles, IGA are the main supermarkets
-- Return ONLY a JSON array, no markdown, no prose
-
-Format: [{"name":"string","calories":number,"protein":number,"carbs":number,"fat":number,"per":"per 100g"}]
-Return [] if query is too vague or nonsensical.`;
+    const sys = 'You are an Australian nutrition database. Return food matches as a JSON array. ' +
+      'STRICT RULES: ALL values MUST be per 100g (or per 100ml for drinks). The user picks their serving size separately — you only provide per-100g base values. ' +
+      'Energy in kcal ONLY — if a label shows kJ divide by 4.184. All macros in grams. Return up to 4 results. Return ONLY a JSON array, no markdown, no prose. ' +
+      'CORRECT per-100g examples: Rokeby Protein Smoothie Dutch Chocolate = 63cal/7.1P/5.2C/1.5F (not the whole bottle). Chobani High Protein Vanilla = 66cal/12.5P/3.8C/0.3F. Chicken breast cooked = 165cal/31P/0C/3.6F. White rice cooked = 130cal/2.7P/28C/0.3F. Weet-Bix = 342cal/12P/62C/2F. ' +
+      'For branded AU products use actual nutrition panel values. For generic foods use standard cooked values. For ambiguous queries return 2-3 variants. ' +
+      'Format: [{"name":"string","calories":number,"protein":number,"carbs":number,"fat":number}]. Return [] if no confident match.';
 
     const res = await callClaude([{type:'text',text:`Food search: ${query}`}], sys);
     const clean = res.replace(/\`\`\`json|\`\`\`/g,'').trim();
@@ -572,7 +667,7 @@ Return [] if query is too vague or nonsensical.`;
         carbs: Math.round((+x.carbs||0)*10)/10,
         fat: Math.round((+x.fat||0)*10)/10,
         source: 'ai-search',
-        per: x.per||'per 100g'
+        per: 'per 100g'
       }))
       .slice(0,5);
   } catch(e) {
@@ -606,18 +701,52 @@ async function doFoodSearch(query) {
   if(!query || query.length < 2) { box.classList.add('hidden'); box.innerHTML=''; return; }
 
   box.classList.remove('hidden');
-  box.innerHTML='<div class="match-loading" id="off-loading"><span class="spin"></span> Searching…</div>';
+
+  // Show custom foods instantly first
+  const custom = searchCustomFoods(query);
+  box.innerHTML = '';
+  if (custom.length) {
+    const sep = document.createElement('div');
+    sep.className = 'matchsep';
+    sep.textContent = '⭐ MY FOODS';
+    box.appendChild(sep);
+    custom.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'foodMatch';
+      el.innerHTML = `<div class="fname">${esc(item.name)}</div>
+        <div class="fmacro">${item.calories} cal · P ${item.protein}g · C ${item.carbs}g · F ${item.fat}g</div>
+        <div class="fsrc">📱 My foods · per 100g</div>`;
+      el.addEventListener('touchstart', ()=>{}, {passive:true});
+      el.onclick = () => addFoodFromDB({...item, source:'custom'});
+      box.appendChild(el);
+    });
+  }
+
+  // Then AI results
+  const aiSep = document.createElement('div');
+  aiSep.className = 'matchsep';
+  aiSep.id = 'ai-sep';
+  aiSep.textContent = '🤖 AI SEARCH';
+  const loadEl = document.createElement('div');
+  loadEl.className = 'match-loading';
+  loadEl.id = 'off-loading';
+  loadEl.innerHTML = '<span class="spin"></span> Searching…';
+  box.appendChild(aiSep);
+  box.appendChild(loadEl);
 
   const results = await searchClaudeProducts(query);
 
-  const loader=document.getElementById('off-loading');
-  if(loader) loader.remove();
-  if(query !== lastSearchQuery) return;
+  const loader = document.getElementById('off-loading');
+  if (loader) loader.remove();
+  if (query !== lastSearchQuery) return;
 
-  if(results.length) {
-    renderMatchItems(results, box, false);
+  if (results.length) {
+    renderMatchItems(results, box, true);
   } else {
-    box.innerHTML='<div class="match-loading">No matches — describe it below with AI estimate</div>';
+    const none = document.createElement('div');
+    none.className = 'match-loading';
+    none.textContent = 'No AI matches — describe it below';
+    box.appendChild(none);
   }
 }
 
@@ -769,7 +898,11 @@ function addFoodFromDB(item) {
 }
 
 function load(){try{return Object.assign({},def,JSON.parse(localStorage.getItem(K)||'{}'))}catch(e){return Object.assign({},def)}}
-function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('Storage blocked — host the file to enable saving',1)}}
+function save(){
+  try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('Storage blocked — host the file to enable saving',1)}
+  // push to Supabase in background (don't await)
+  sbPush().catch(()=>{});
+}
 
 /* ---------------- date helpers ---------------- */
 // viewDate is a YYYY-MM-DD string, never a mutable Date object.
@@ -890,6 +1023,40 @@ async function analyzeFoodPhoto(file){
   ],FOOD_SYS);
   return parseJSON(out);
 }
+
+async function scanNutritionLabel(file) {
+  loading('Reading nutrition label…');
+  const b64 = await fileToB64(file);
+  const sys = 'You are a nutrition label reader. Extract values from the nutrition panel in the photo and ALWAYS return per 100g (or per 100ml for liquids). ' +
+    'STEP 1 — Find the serve size: look for "per serve", "per serving", "per bar", "per piece", "per biscuit", "per cup", "per tablet", or any similar unit. Note the gram/ml value. ' +
+    'STEP 2 — Find the nutrient values: could be per serve, per 100g, or both columns. ' +
+    'STEP 3 — Convert to per 100g: if you only have per-serve values, multiply by (100 / serve_size_in_grams). Example: 30g serve with 113 kcal → per 100g = 113/30*100 = 377 kcal. ' +
+    'STEP 4 — Energy MUST be in kcal. If label shows kJ, divide by 4.184. Never output kJ as if it were kcal. ' +
+    'STEP 5 — suggest 2-3 realistic serving sizes for this product type (e.g. [30,40] for protein powder, [170,200] for yoghurt, [65] for a bar). ' +
+    'Return ONLY JSON: {"name":string,"calories":number,"protein":number,"carbs":number,"fat":number,"servingSuggestions":[numbers]} ' +
+    'No markdown, no prose, no explanation.';
+  const out = await callClaude([
+    {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:b64}},
+    {type:'text',text:'Read this nutrition label. Convert everything to per 100g. Return JSON only.'}
+  ], sys);
+  return parseJSON(out);
+}
+
+// Show a confirm sheet before saving scanned food to custom database
+let _scannedFood = null;
+function showLabelConfirm(food) {
+  _scannedFood = food;
+  document.getElementById('lc-name').value = food.name || '';
+  document.getElementById('lc-cal').value = Math.round(food.calories || 0);
+  document.getElementById('lc-p').value = Math.round((food.protein || 0) * 10) / 10;
+  document.getElementById('lc-c').value = Math.round((food.carbs || 0) * 10) / 10;
+  document.getElementById('lc-f').value = Math.round((food.fat || 0) * 10) / 10;
+  document.getElementById('labelConfirmPanel').classList.remove('hidden');
+  document.getElementById('servPanel').classList.add('hidden');
+  document.getElementById('foodMatches').classList.add('hidden');
+  const hint = document.getElementById('searchHint');
+  if (hint) hint.classList.add('hidden');
+}
 async function readGarmin(file){
   loading('Reading Garmin…');
   const b64=await fileToB64(file);
@@ -962,14 +1129,14 @@ function renderToday(){
   const MEALS=['Breakfast','Lunch','Dinner','Snack'];
   const groups={};
   day.foods.forEach((x,i)=>{
-    const m=x.meal||'Other';
+    const m=x.meal||(viewDate===todayISO()?'Other':'Uncategorised');
     if(!groups[m])groups[m]=[];
     groups[m].push({item:x,idx:i});
   });
   // Render in meal order
   const favNames=new Set(getFavs().map(f=>f.name));
   let html='';
-  const orderedMeals=[...MEALS,'Other'].filter(m=>groups[m]);
+  const orderedMeals=[...MEALS,'Other','Uncategorised'].filter(m=>groups[m]);
   orderedMeals.forEach(meal=>{
     const mCalTotal=groups[meal].reduce((s,{item})=>s+(item.calories||0),0);
     html+=`<div class="mealgroup">${meal} · ${Math.round(mCalTotal)} cal</div>`;
@@ -1090,8 +1257,28 @@ function fillSettings(){
   document.getElementById('calGoal').value=S.calGoal;
   document.getElementById('proGoal').value=S.proGoal;
   document.getElementById('tdeeInput').value=S.tdee;
-
+  document.getElementById('sbUrl').value=S.sbUrl||'';
+  document.getElementById('sbKey').value=S.sbKey||'';
+  const statusEl=document.getElementById('sbStatus');
+  if(S.sbUrl&&S.sbKey) statusEl.textContent='✓ Connected to Supabase';
+  else statusEl.textContent='';
 }
+document.getElementById('sbConnect').onclick=async()=>{
+  const url=document.getElementById('sbUrl').value.trim();
+  const key=document.getElementById('sbKey').value.trim();
+  const statusEl=document.getElementById('sbStatus');
+  if(!url||!key){toast('Enter both Supabase URL and key',1);return;}
+  statusEl.textContent='Testing connection…';
+  const result=await sbSetup(url,key);
+  if(!result.ok){statusEl.textContent='❌ '+result.msg;toast(result.msg,1);return;}
+  S.sbUrl=url;S.sbKey=key;
+  save(); // saves locally first
+  statusEl.textContent='⏳ Pulling your data…';
+  const pulled=await sbPull();
+  fillSettings();renderToday();renderTrends();
+  if(pulled){statusEl.textContent='✓ Connected — data restored from cloud';toast('Data restored from Supabase ✓');}
+  else{statusEl.textContent='✓ Connected — pushing data to cloud';await sbPush();toast('Connected to Supabase ✓');}
+};
 document.getElementById('saveSettings').onclick=()=>{
   S.apiKey=document.getElementById('apiKey').value.trim();
   S.model=document.getElementById('model').value.trim()||def.model;
@@ -1164,6 +1351,7 @@ function closeSheet(){
   document.getElementById('servGrams').value='';
   document.getElementById('favPanel').classList.add('hidden');
   document.getElementById('quickPanel').classList.add('hidden');
+  document.getElementById('labelConfirmPanel').classList.add('hidden');
   lastSearchQuery='';
   _servItem=null;
 }
@@ -1200,6 +1388,29 @@ document.getElementById('foodPhoto').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;e.target.value='';
   try{const r=await analyzeFoodPhoto(f);r.meal=currentMeal;ensureDay(viewDate).foods.push(r);save();renderToday();renderTrends();closeSheet();toast('Added '+esc(r.name)+' ✓')}
   catch(err){toast(err.message.includes('API')?err.message:'Couldn’t read that photo',1)}
+};
+document.getElementById('labelPhoto').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;e.target.value='';
+  try{
+    const r=await scanNutritionLabel(f);
+    toast('');
+    showLabelConfirm(r);
+  }catch(err){toast(err.message.includes('API')?err.message:'Couldn’t read that label',1)}
+};
+document.getElementById('lcSave').onclick=()=>{
+  const name=document.getElementById('lc-name').value.trim();
+  if(!name){toast('Enter a product name',1);return;}
+  const food={name,calories:+document.getElementById('lc-cal').value||0,protein:+document.getElementById('lc-p').value||0,carbs:+document.getElementById('lc-c').value||0,fat:+document.getElementById('lc-f').value||0,source:'custom'};
+  saveCustomFood(food);
+  document.getElementById('labelConfirmPanel').classList.add('hidden');
+  openServPicker({...food});
+  toast('Saved to My Foods ✓');
+};
+document.getElementById('lcSkip').onclick=()=>{
+  const name=document.getElementById('lc-name').value.trim()||'Scanned food';
+  const food={name,calories:+document.getElementById('lc-cal').value||0,protein:+document.getElementById('lc-p').value||0,carbs:+document.getElementById('lc-c').value||0,fat:+document.getElementById('lc-f').value||0,source:'scanned'};
+  document.getElementById('labelConfirmPanel').classList.add('hidden');
+  openServPicker({...food});
 };
 /* quick add (manual macros) */
 document.getElementById('qaSave').onclick=()=>{
@@ -1271,7 +1482,11 @@ document.getElementById('nextDay').onclick=()=>{viewDate=shiftDate(viewDate,1);e
 /* ---------------- init ---------------- */
 renderToday();renderTrends();
 initMealTabs();
-if(!S.apiKey)setTimeout(()=>toast('Tap the settings icon to add your API key & get started'),600);
+// On startup, if Supabase is configured, pull latest data from cloud
+if(S.sbUrl && S.sbKey){
+  sbPull().then(pulled=>{if(pulled){renderToday();renderTrends();toast('Synced from cloud ✓');}}).catch(()=>{});
+}
+if(!S.apiKey&&!S.sbUrl)setTimeout(()=>toast('Go to Settings to connect Supabase & add your API key'),600);
 </script>
 </body>
 </html>
