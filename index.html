@@ -254,6 +254,12 @@
   .editrow .erbtns button{flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:600}
   .editrow .erbtns .sv{background:var(--teal);color:#06201d}
   .editrow .erbtns .cx{background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+  .tile.icon-only{padding:10px 4px;min-width:0;flex:1;font-size:0}
+  .tile.icon-only .tic{margin-bottom:0}
+  .tilerow{transition:opacity 0.15s,max-height 0.2s ease;max-height:80px;overflow:hidden}
+  .tilerow.hidden-tiles{opacity:0;max-height:0;pointer-events:none;margin:0}
+  .sheet-input{transition:opacity 0.15s,max-height 0.25s ease;max-height:200px;overflow:hidden}
+  .sheet-input.hidden{opacity:0;max-height:0;pointer-events:none;margin:0;padding:0}
 </style>
 
 </head>
@@ -488,30 +494,30 @@
       <button class="mealtab" data-meal="Snack">🍎 Snack</button>
     </div>
 
-    <div class="sheet-input">
-      <input type="text" id="foodInput" placeholder="e.g. Chobani vanilla 170g, 200g chicken breast, 2 eggs…" enterkeyhint="search">
+    <div class="sheet-input hidden" id="searchBar">
+      <input type="text" id="foodInput" placeholder="Search food…" enterkeyhint="search">
       <div id="foodMatches" class="foodMatches hidden"></div>
       <div class="search-hint" id="searchHint">Try: "Rokeby choc 425ml" · "200g white rice cooked" · "2 scrambled eggs"</div>
-      <button class="addbtn" id="addBtn" style="margin-top:8px"><svg class="svi" viewBox="0 0 24 24" style="margin-right:6px"><path d="M5 3l14 9-14 9V3z"/></svg>Estimate with AI</button>
+      <button class="addbtn" id="addBtn" style="margin-top:8px"><svg class="svi" viewBox="0 0 24 24" style="margin-right:6px"><path d="M5 3l14 9-14 9V3z"/></svg>Estimate</button>
     </div>
 
-    <div class="tilerow">
-      <label class="tile" id="photoBtn" for="foodPhoto">
-        <span class="tic"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>Photo
+    <div class="tilerow" id="tileRow">
+      <label class="tile icon-only" id="photoBtn" for="foodPhoto" title="Photo">
+        <span class="tic"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
         <input type="file" accept="image/*" id="foodPhoto">
       </label>
-      <label class="tile" id="scanLabelBtn" for="labelPhoto">
-        <span class="tic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h6M7 16h8"/></svg></span>Scan label
+      <label class="tile icon-only" id="scanLabelBtn" for="labelPhoto" title="Scan label">
+        <span class="tic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h6M7 16h8"/></svg></span>
         <input type="file" accept="image/*" id="labelPhoto">
       </label>
-      <button class="tile" id="quickTile">
-        <span class="tic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>Quick add
+      <button class="tile icon-only" id="quickTile" title="Quick add">
+        <span class="tic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
       </button>
-      <button class="tile" id="weightTile">
-        <span class="tic"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9z"/><path d="M12 8l3 4H9z"/></svg></span>Weight
+      <button class="tile icon-only" id="searchTile" title="Search food">
+        <span class="tic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       </button>
-      <button class="tile" id="favTile">
-        <span class="tic"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>Favourites
+      <button class="tile icon-only" id="favTile" title="Favourites">
+        <span class="tic"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
       </button>
     </div>
 
@@ -1363,11 +1369,13 @@ function closeSheet(){
   document.getElementById('quickPanel').classList.add('hidden');
   document.getElementById('weightPanel').classList.add('hidden');
   document.getElementById('quickTile').classList.remove('on');
-  document.getElementById('weightTile').classList.remove('on');
+  document.getElementById('quickTile').classList.remove('on');
   document.getElementById('foodInput').value='';
   document.getElementById('foodMatches').classList.add('hidden');
   document.getElementById('foodMatches').innerHTML='';
   const _hint=document.getElementById('searchHint');if(_hint)_hint.classList.remove('hidden');
+  document.getElementById('tileRow').classList.remove('hidden-tiles');
+  document.getElementById('searchBar').classList.add('hidden');
   document.getElementById('servPanel').classList.add('hidden');
   document.getElementById('servGrams').value='';
   document.getElementById('favPanel').classList.add('hidden');
@@ -1380,14 +1388,8 @@ document.getElementById('fabBtn').onclick=openSheet;
 document.getElementById('sheetX').onclick=closeSheet;
 document.getElementById('sheetBg').onclick=closeSheet;
 document.getElementById('quickTile').onclick=()=>{
-  const pe=document.getElementById('quickPanel'),we=document.getElementById('weightPanel');
-  we.classList.add('hidden');document.getElementById('weightTile').classList.remove('on');
+  const pe=document.getElementById('quickPanel');
   pe.classList.toggle('hidden');document.getElementById('quickTile').classList.toggle('on',!pe.classList.contains('hidden'));
-};
-document.getElementById('weightTile').onclick=()=>{
-  const pe=document.getElementById('quickPanel'),we=document.getElementById('weightPanel');
-  pe.classList.add('hidden');document.getElementById('quickTile').classList.remove('on');
-  we.classList.toggle('hidden');document.getElementById('weightTile').classList.toggle('on',!we.classList.contains('hidden'));
 };
 
 /* ---------------- food add ---------------- */
@@ -1399,6 +1401,13 @@ async function addFood(){
 }
 document.getElementById('addBtn').onclick=addFood;
 document.getElementById('foodInput').addEventListener('keydown',e=>{if(e.key==='Enter')addFood()});
+document.getElementById('searchTile').onclick=()=>{
+  const bar=document.getElementById('searchBar');
+  const tileRow=document.getElementById('tileRow');
+  bar.classList.remove('hidden');
+  tileRow.classList.add('hidden-tiles');
+  setTimeout(()=>document.getElementById('foodInput').focus(),50);
+};
 document.getElementById('foodInput').addEventListener('input',e=>{
   clearTimeout(offDebounce);
   const q=e.target.value.trim();
