@@ -777,6 +777,52 @@ function getDay(isoStr){
 // ensureDay: only call on write paths (add/edit/delete food)
 function ensureDay(isoStr){if(!S.days[isoStr])S.days[isoStr]={foods:[]};return S.days[isoStr]}
 
+/* ---- Meal type ---- */
+let currentMeal = 'Breakfast';
+function initMealTabs(){
+  document.querySelectorAll('.mealtab').forEach(btn=>{
+    btn.onclick=()=>{
+      currentMeal=btn.dataset.meal;
+      document.querySelectorAll('.mealtab').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+    };
+  });
+  const h=new Date().getHours();
+  const auto=h<10?'Breakfast':h<14?'Lunch':h<18?'Dinner':'Snack';
+  currentMeal=auto;
+  document.querySelectorAll('.mealtab').forEach(b=>{
+    b.classList.toggle('on',b.dataset.meal===auto);
+  });
+}
+
+/* ---- Favourites ---- */
+function getFavs(){return S.favourites||[]}
+function saveFav(item){
+  if(!S.favourites)S.favourites=[];
+  const exists=S.favourites.some(f=>f.name===item.name);
+  if(!exists){S.favourites.push({name:item.name,calories:item.calories,protein:item.protein,carbs:item.carbs,fat:item.fat});save();}
+  return !exists;
+}
+function removeFav(name){
+  if(!S.favourites)return;
+  S.favourites=S.favourites.filter(f=>f.name!==name);
+  save();
+}
+function renderFavs(){
+  const list=document.getElementById('favList');
+  const favs=getFavs();
+  if(!favs.length){list.innerHTML='<div class="empty" style="font-size:12px">No favourites yet.<br>Tap ★ on any logged food to save it.</div>';return;}
+  list.innerHTML='';
+  favs.forEach(item=>{
+    const el=document.createElement('div');
+    el.className='favitem';
+    el.innerHTML=`<div><div class="fi-name">${esc(item.name)}</div><div class="fi-mac">${item.calories} cal · P${item.protein}g · C${item.carbs}g · F${item.fat}g · per 100g</div></div><button class="fi-del" title="Remove">×</button>`;
+    el.querySelector('.fi-del').onclick=(e)=>{e.stopPropagation();removeFav(item.name);renderFavs();};
+    el.onclick=()=>openServPicker({...item});
+    list.appendChild(el);
+  });
+}
+
 /* ---------------- toast ---------------- */
 let tt;
 function toast(msg,err){const el=document.getElementById('toast');el.innerHTML=msg;el.className='show'+(err?' err':'');clearTimeout(tt);tt=setTimeout(()=>el.className='',err?3800:2400)}
