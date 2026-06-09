@@ -114,10 +114,10 @@
   .sheet-head h3{font-size:20px;font-weight:800}
   .sheet-x{width:32px;height:32px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;color:var(--muted)}
   .sheet-x svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;stroke-linecap:round}
-  .sheet-input{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+  .sheet-input{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
   .sheet-input input{background:var(--surface2);border:1px solid var(--line)}
-  .foodMatches{background:var(--surface2);border:1px solid var(--line);border-radius:10px;max-height:200px;overflow-y:auto;margin-top:-8px;margin-bottom:8px}
-  .foodMatches.hidden{display:none}
+  .foodMatches{background:var(--surface2);border:1px solid var(--line);border-radius:10px;height:220px;overflow-y:auto;margin-top:-4px;margin-bottom:8px;transition:opacity .2s}
+  .foodMatches.hidden{visibility:hidden;pointer-events:none;opacity:0}
   .foodMatch{padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
   .foodMatch:last-child{border-bottom:none}
   .foodMatch:active{background:var(--line)}
@@ -605,13 +605,8 @@ async function doFoodSearch(query) {
   const box = document.getElementById('foodMatches');
   if(!query || query.length < 2) { box.classList.add('hidden'); box.innerHTML=''; return; }
 
-  box.innerHTML='';
   box.classList.remove('hidden');
-
-  // Show spinner
-  const loadEl=document.createElement('div');loadEl.className='match-loading';loadEl.id='off-loading';
-  loadEl.innerHTML='<span class="spin"></span> Searching…';
-  box.appendChild(loadEl);
+  box.innerHTML='<div class="match-loading" id="off-loading"><span class="spin"></span> Searching…</div>';
 
   const results = await searchClaudeProducts(query);
 
@@ -630,36 +625,60 @@ async function doFoodSearch(query) {
 let _servItem = null; // the per-100g base item being portioned
 
 // Presets per food category (heuristic on name)
+/* ---- Serving unit detection ---- */
+function isDrink(name) {
+  const n = name.toLowerCase();
+  // Explicitly NOT drinks even though they contain drink-like words
+  if(n.includes('yogh') || n.includes('protein bar') || n.includes('powder')) return false;
+  return n.includes('smoothie') || n.includes('shake') || n.includes('drink') ||
+    n.includes('juice') || n.includes('milk') || n.includes('water') ||
+    n.includes('cola') || n.includes('pepsi') || n.includes('energy') ||
+    n.includes('coffee') || n.includes('tea') || n.includes('gatorade') ||
+    n.includes('powerade') || n.includes('up&go') || n.includes('up go') ||
+    n.includes('milo') || n.includes('kombucha') || n.includes('kefir') ||
+    n.includes('rokeby');
+}
+
 function getPresets(name) {
   const n = name.toLowerCase();
-  // Drinks & smoothies — whole container first (check before generic "protein"/"shake")
-  if(n.includes('smoothie'))                    return [425,250,200];
-  if(n.includes('up&go') || n.includes('up go'))return [250,200];
-  if(n.includes('iced coffee') || n.includes('iced tea') || n.includes('chocolate milk') || n.includes('choc milk')) return [250,300,500];
-  if(n.includes('juice') || n.includes('energy drink') || n.includes('cola') || n.includes('pepsi') || n.includes('gatorade') || n.includes('powerade')) return [250,375,500];
-  if(n.includes('ready to drink') || (n.includes('protein') && n.includes('drink'))) return [425,250];
-  // Dairy
+  // Drinks — return ml sizes matching common AU packaging
+  // Named brands checked FIRST before generic terms like "milk"
+  if(n.includes('rokeby'))                       return [425];
+  if(n.includes('up&go') || n.includes('up go')) return [250];
+  if(n.includes('smoothie'))                     return [425,300,250];
+  if(n.includes('protein smoothie'))             return [425];
+  if(n.includes('iced coffee') || n.includes('farmers union') || n.includes('oak')) return [500,375,250];
+  if(n.includes('energy drink') || n.includes('red bull') || n.includes(' v ') || n.includes('mother')) return [250,355,500];
+  if(n.includes('cola') || n.includes('pepsi') || n.includes('sprite') || n.includes('fanta')) return [250,375,600];
+  if(n.includes('gatorade') || n.includes('powerade'))  return [600,500,250];
+  if(n.includes('juice'))                        return [250,300,500];
+  // Generic milk — but NOT protein shakes/yoghurt which happen to contain "milk"
+  if((n.includes('milk') || n.includes('soy milk') || n.includes('oat milk') || n.includes('almond milk')) && !n.includes('protein') && !n.includes('yogh')) return [200,250,300];
+  if(n.includes('shake') && !n.includes('protein shake')) return [300,400,500];
+  // Yoghurt
   if(n.includes('yogh') || n.includes('yog'))   return [170,200,250];
-  if(n.includes('milk'))                         return [200,250,300];
+  // Protein powder & bars
+  if(n.includes('powder') || n.includes('wpi') || n.includes('whey') || n.includes('supplement')) return [25,30,40];
+  if(n.includes('protein bar') || n.includes('quest') || n.includes('clif')) return [60,70];
+  if(n.includes('protein') && (n.includes('shake') || n.includes('drink'))) return [425,300];
+  if(n.includes('protein'))                      return [25,30,40];
+  // Cheese & dairy solids
   if(n.includes('cottage cheese'))               return [100,200];
   if(n.includes('cheese'))                       return [20,30,40];
   if(n.includes('butter'))                       return [5,10,15];
-  // Protein powder & bars (only if NOT a smoothie/drink — already caught above)
-  if(n.includes('powder') || n.includes('supplement') || n.includes('wpi') || n.includes('whey')) return [25,30,40];
-  if(n.includes('protein bar') || n.includes('bar') && n.includes('protein')) return [60,70];
-  if(n.includes('protein'))                      return [25,30,40];
-  if(n.includes('shake'))                        return [300,400];
-  // Meat & protein foods
-  if(n.includes('chicken') || n.includes('beef') || n.includes('pork') || n.includes('fish') || n.includes('salmon') || n.includes('tuna') || n.includes('turkey') || n.includes('mince')) return [100,120,150,200];
+  // Meat
+  if(n.includes('chicken') || n.includes('beef') || n.includes('pork') || n.includes('fish') ||
+     n.includes('salmon') || n.includes('tuna') || n.includes('turkey') || n.includes('mince')) return [100,120,150,200];
   if(n.includes('ham') || n.includes('bacon') || n.includes('salami')) return [30,50,80];
   // Carbs
   if(n.includes('oat') || n.includes('cereal') || n.includes('muesli')) return [30,45,60];
   if(n.includes('bread') || n.includes('toast') || n.includes('wrap')) return [30,40,50];
   if(n.includes('rice') || n.includes('pasta') || n.includes('noodle')) return [100,150,200];
-  // Other
-  if(n.includes('egg'))                          return [55,110,165];
+  // Condiments
   if(n.includes('oil') || n.includes('sauce') || n.includes('dressing') || n.includes('mayo')) return [10,15,20];
   if(n.includes('peanut butter') || n.includes('vegemite') || n.includes('nutella')) return [15,20,30];
+  // Snacks
+  if(n.includes('egg'))                          return [55,110,165];
   if(n.includes('chips') || n.includes('crackers') || n.includes('biscuit')) return [25,30,50];
   return [100,150,200];
 }
@@ -669,31 +688,39 @@ function openServPicker(item) {
   document.getElementById('foodMatches').classList.add('hidden');
   document.getElementById('servFoodName').textContent = item.name;
 
-  // Build presets
+  // Detect if this is a drink — use ml label
+  const drink = isDrink(item.name);
+  _servItem._isDrink = drink;
+  const unitEl = document.querySelector('.servrow .unit');
+  if(unitEl) unitEl.textContent = drink ? 'ml' : 'g';
+  const inputEl = document.getElementById('servGrams');
+  inputEl.placeholder = drink ? '250' : '100';
+
+  // Build presets with correct unit label
   const presets = getPresets(item.name);
   const presetsEl = document.getElementById('servPresets');
   presetsEl.innerHTML = '';
-  presets.forEach(g => {
+  presets.forEach((v,idx) => {
     const b = document.createElement('button');
     b.className = 'servpreset';
-    b.textContent = g + 'g';
+    b.textContent = v + (drink ? 'ml' : 'g');
     b.onclick = () => {
-      document.getElementById('servGrams').value = g;
+      inputEl.value = v;
       presetsEl.querySelectorAll('.servpreset').forEach(x => x.classList.remove('on'));
       b.classList.add('on');
-      updateServMacros(g);
+      updateServMacros(v);
     };
     presetsEl.appendChild(b);
   });
 
   // Default to first preset
-  const defaultG = presets[1] || presets[0];
-  document.getElementById('servGrams').value = defaultG;
-  presetsEl.children[presets.indexOf(defaultG)]?.classList.add('on');
-  updateServMacros(defaultG);
+  const defaultV = presets[0];
+  inputEl.value = defaultV;
+  presetsEl.children[0]?.classList.add('on');
+  updateServMacros(defaultV);
 
   document.getElementById('servPanel').classList.remove('hidden');
-  document.getElementById('servGrams').focus();
+  inputEl.focus();
 }
 
 function updateServMacros(g) {
@@ -707,7 +734,6 @@ function updateServMacros(g) {
 
 document.getElementById('servGrams').addEventListener('input', e => {
   const g = parseFloat(e.target.value);
-  // Deselect presets when typing custom value
   document.querySelectorAll('.servpreset').forEach(x => x.classList.remove('on'));
   if(g > 0) updateServMacros(g);
 });
@@ -717,8 +743,9 @@ document.getElementById('servAdd').onclick = () => {
   const g = parseFloat(document.getElementById('servGrams').value);
   if(!g || g <= 0) { toast('Enter a serving size', 1); return; }
   const r = g / 100;
+  const unit = _servItem._isDrink ? 'ml' : 'g';
   const entry = {
-    name: _servItem.name + ' (' + g + 'g)',
+    name: _servItem.name + ' (' + g + unit + ')',
     calories: Math.round(_servItem.calories * r),
     protein:  Math.round(_servItem.protein  * r * 10) / 10,
     carbs:    Math.round(_servItem.carbs    * r * 10) / 10,
