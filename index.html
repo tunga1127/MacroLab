@@ -394,7 +394,11 @@
       <div class="field">
         <label>Supabase Anon Key</label>
         <input type="password" id="sbKey" placeholder="sb_publishable_...">
-        <div class="hint">Find these in your Supabase project → Settings → API. Your data syncs automatically once connected.</div>
+      </div>
+      <div class="field">
+        <label>Sync Username</label>
+        <input type="text" id="sbUsername" placeholder="e.g. tunga or your email" autocomplete="off" autocorrect="off" autocapitalize="none">
+        <div class="hint">Your permanent ID for cloud sync — pick anything you'll always remember (email, nickname, etc). This is how your data is found across devices. Write it down somewhere safe.</div>
       </div>
       <button class="btn" id="sbConnect" style="margin-bottom:0">Connect Supabase</button>
       <div id="sbStatus" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center"></div>
@@ -557,18 +561,13 @@
 <script>
 /* ---------------- storage ---------------- */
 const K='macrolab_v1';
-const def={apiKey:'',model:'claude-haiku-4-5-20251001',calGoal:2000,proGoal:117,tdee:2360,days:{},weights:[],favourites:[],customFoods:[],sbUrl:'',sbKey:''};
+const def={apiKey:'',model:'claude-haiku-4-5-20251001',calGoal:2000,proGoal:117,tdee:2360,days:{},weights:[],favourites:[],customFoods:[],sbUrl:'',sbKey:'',sbUsername:''};
 let S=load();
 
 /* ---------------- Supabase sync ---------------- */
-// All data is stored in a single row keyed by a device/user ID stored in localStorage.
-// This means no auth needed — just the anon key. The row is upserted on every save.
-
-const SB_DEVICE_KEY = 'macrolab_device_id';
-function getDeviceId() {
-  let id = localStorage.getItem(SB_DEVICE_KEY);
-  if (!id) { id = 'ml_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem(SB_DEVICE_KEY, id); }
-  return id;
+function getSyncId() {
+  // Use chosen username (lowercased, trimmed) as the permanent key
+  return (S.sbUsername||'').toLowerCase().trim();
 }
 
 async function sbFetch(path, method='GET', body=null) {
@@ -594,23 +593,23 @@ async function sbFetch(path, method='GET', body=null) {
 
 async function sbPush() {
   if (!S.sbUrl || !S.sbKey) return;
-  const deviceId = getDeviceId();
-  // Store everything except sbUrl/sbKey themselves (no need to nest credentials)
-  const payload = { device_id: deviceId, data: JSON.stringify(S), updated_at: new Date().toISOString() };
+  const syncId = getSyncId();
+  if (!syncId) return;
+  const payload = { device_id: syncId, data: JSON.stringify(S), updated_at: new Date().toISOString() };
   await sbFetch('/rest/v1/macrolab_data', 'POST', payload);
 }
 
 async function sbPull() {
   if (!S.sbUrl || !S.sbKey) return false;
-  const deviceId = getDeviceId();
-  const rows = await sbFetch('/rest/v1/macrolab_data?device_id=eq.' + encodeURIComponent(deviceId) + '&select=data');
+  const syncId = getSyncId();
+  if (!syncId) return false;
+  const rows = await sbFetch('/rest/v1/macrolab_data?device_id=eq.' + encodeURIComponent(syncId) + '&select=data');
   if (!rows || !rows.length || !rows[0].data) return false;
   try {
     const remote = JSON.parse(rows[0].data);
-    // Merge: remote is base, local settings win for sbUrl/sbKey
-    const localSbUrl = S.sbUrl, localSbKey = S.sbKey;
-    S = Object.assign({}, def, remote, { sbUrl: localSbUrl, sbKey: localSbKey });
-    save(); // save merged state locally
+    const localSbUrl = S.sbUrl, localSbKey = S.sbKey, localSbUsername = S.sbUsername;
+    S = Object.assign({}, def, remote, { sbUrl: localSbUrl, sbKey: localSbKey, sbUsername: localSbUsername });
+    save();
     return true;
   } catch(e) { console.warn('sbPull parse error', e); return false; }
 }
@@ -1259,25 +1258,28 @@ function fillSettings(){
   document.getElementById('tdeeInput').value=S.tdee;
   document.getElementById('sbUrl').value=S.sbUrl||'';
   document.getElementById('sbKey').value=S.sbKey||'';
+  document.getElementById('sbUsername').value=S.sbUsername||'';
   const statusEl=document.getElementById('sbStatus');
-  if(S.sbUrl&&S.sbKey) statusEl.textContent='✓ Connected to Supabase';
+  if(S.sbUrl&&S.sbKey&&S.sbUsername) statusEl.textContent='✓ Connected as "'+S.sbUsername+'"';
   else statusEl.textContent='';
 }
 document.getElementById('sbConnect').onclick=async()=>{
   const url=document.getElementById('sbUrl').value.trim();
   const key=document.getElementById('sbKey').value.trim();
+  const username=document.getElementById('sbUsername').value.trim().toLowerCase();
   const statusEl=document.getElementById('sbStatus');
-  if(!url||!key){toast('Enter both Supabase URL and key',1);return;}
+  if(!url||!key){toast('Enter your Supabase URL and key',1);return;}
+  if(!username){toast('Enter a sync username',1);return;}
   statusEl.textContent='Testing connection…';
   const result=await sbSetup(url,key);
   if(!result.ok){statusEl.textContent='❌ '+result.msg;toast(result.msg,1);return;}
-  S.sbUrl=url;S.sbKey=key;
-  save(); // saves locally first
-  statusEl.textContent='⏳ Pulling your data…';
+  S.sbUrl=url;S.sbKey=key;S.sbUsername=username;
+  save();
+  statusEl.textContent='⏳ Looking for your data…';
   const pulled=await sbPull();
   fillSettings();renderToday();renderTrends();
-  if(pulled){statusEl.textContent='✓ Connected — data restored from cloud';toast('Data restored from Supabase ✓');}
-  else{statusEl.textContent='✓ Connected — pushing data to cloud';await sbPush();toast('Connected to Supabase ✓');}
+  if(pulled){statusEl.textContent='✓ Connected as "'+username+'" — data restored';toast('Data restored ✓');}
+  else{statusEl.textContent='✓ Connected as "'+username+'" — saving data now';await sbPush();toast('Connected to Supabase ✓');}
 };
 document.getElementById('saveSettings').onclick=()=>{
   S.apiKey=document.getElementById('apiKey').value.trim();
