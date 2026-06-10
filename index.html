@@ -572,7 +572,7 @@
   <div class="fp-head"><button class="fp-back" data-fpback="1"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><h3>Search food</h3></div>
   <div class="fp-body">
     <div class="sheet-input" id="searchBar">
-      <input type="text" id="foodInput" placeholder="Search food or describe a meal…" enterkeyhint="search">
+      <input type="text" id="foodInput" placeholder="Search food or describe a meal…" enterkeyhint="search" autofocus>
       <div class="search-hint" id="searchHint">Try: "Rokeby choc 425ml" · "200g white rice cooked" · "2 scrambled eggs"</div>
     </div>
     <div id="foodMatches" class="foodMatches hidden"></div>
@@ -584,7 +584,7 @@
 <div class="fullpage hidden" id="fp-quick">
   <div class="fp-head"><button class="fp-back" data-fpback="1"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><h3>Quick add</h3></div>
   <div class="fp-body">
-    <div class="er1" style="margin-bottom:10px"><input type="text" id="qa-name" placeholder="Food name"></div>
+    <div class="er1" style="margin-bottom:10px"><input type="text" id="qa-name" placeholder="Food name" autofocus></div>
     <div class="ermac">
       <div class="m"><label>CAL</label><input type="number" inputmode="numeric" id="qa-cal"></div>
       <div class="m"><label>P</label><input type="number" inputmode="numeric" id="qa-p"></div>
@@ -612,7 +612,7 @@
       <div class="servfood" id="servFoodName"></div>
       <div class="servpresets" id="servPresets"></div>
       <div class="servrow">
-        <input type="number" inputmode="decimal" id="servGrams" placeholder="100" min="1" max="9999">
+        <input type="number" inputmode="decimal" id="servGrams" placeholder="100" min="1" max="9999" autofocus>
         <span class="unit">g</span>
       </div>
       <div class="servmacros">
@@ -631,7 +631,7 @@
   <div class="fp-head"><button class="fp-back" data-fpback="1"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><h3>Confirm label</h3></div>
   <div class="fp-body">
     <div style="font-size:12px;color:var(--teal);font-weight:600;margin-bottom:12px">✓ Label scanned — confirm values (per 100g)</div>
-    <div class="er1" style="margin-bottom:10px"><input type="text" id="lc-name" placeholder="Product name"></div>
+    <div class="er1" style="margin-bottom:10px"><input type="text" id="lc-name" placeholder="Product name" autofocus></div>
     <div class="ermac" style="margin-bottom:12px">
       <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">CAL</label><input type="number" inputmode="numeric" id="lc-cal" style="font-size:13px;padding:8px 4px;text-align:center"></div>
       <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">P</label><input type="number" inputmode="numeric" id="lc-p" style="font-size:13px;padding:8px 4px;text-align:center"></div>
@@ -949,6 +949,7 @@ function openServPicker(item) {
 
   openFP('fp-serving');
   inputEl.focus();
+  inputEl.click();
 }
 
 function updateServMacros(g) {
@@ -1541,7 +1542,9 @@ document.getElementById('sheetX').onclick=closeSheet;
 document.getElementById('sheetBg').onclick=closeSheet;
 document.getElementById('quickTile').onclick=()=>{
   openFP('fp-quick');
-  setTimeout(()=>document.getElementById('qa-name').focus(),80);
+  const inp = document.getElementById('qa-name');
+  inp.focus();
+  inp.click();
 };
 
 /* ---------------- food add ---------------- */
@@ -1565,7 +1568,9 @@ document.querySelectorAll('[data-fpback]').forEach(b=>b.onclick=()=>closeFPs());
 
 document.getElementById('searchTile').onclick=()=>{
   openFP('fp-search');
-  setTimeout(()=>document.getElementById('foodInput').focus(),80);
+  const inp = document.getElementById('foodInput');
+  inp.focus();
+  inp.click();
 };
 document.getElementById('favTile').onclick=()=>{
   renderFavs();
