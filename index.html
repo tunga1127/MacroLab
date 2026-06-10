@@ -105,11 +105,20 @@
   .iconbtn{width:44px;height:44px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;flex-shrink:0;font-size:19px}
   .iconbtn:active{transform:scale(.92)}
 
-  /* add pop-up sheet */
+  /* add pop-up sheet — floats above nav */
   .sheet{position:fixed;inset:0;z-index:80}
   .sheet.hidden{display:none}
   .sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);animation:fade .2s ease}
-  .sheet-card{position:absolute;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--surface);border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid var(--line);padding:10px 18px max(24px,env(safe-area-inset-bottom));animation:slideup .26s cubic-bezier(.2,.9,.3,1)}
+  .sheet-card{position:absolute;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;background:var(--surface);border-radius:24px;border:1px solid var(--line);padding:10px 18px 20px;animation:slideup .26s cubic-bezier(.2,.9,.3,1)}
+  /* full-screen pages for add actions */
+  .fullpage{position:fixed;inset:0;z-index:140;background:var(--bg);display:flex;flex-direction:column;animation:slidein .22s cubic-bezier(.2,.9,.3,1)}
+  .fullpage.hidden{display:none}
+  @keyframes slidein{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .fp-head{display:flex;align-items:center;gap:12px;padding:14px 16px calc(12px);padding-top:max(14px,env(safe-area-inset-top));border-bottom:1px solid var(--line);background:var(--surface);flex-shrink:0}
+  .fp-head h3{font-size:17px;font-weight:700;flex:1}
+  .fp-back{width:36px;height:36px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;color:var(--text);flex-shrink:0}
+  .fp-back svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .fp-body{flex:1;overflow-y:auto;padding:16px;padding-bottom:max(24px,env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
   @keyframes fade{from{opacity:0}to{opacity:1}}
   @keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
   .sheet-grab{width:38px;height:4px;border-radius:99px;background:var(--line);margin:4px auto 14px}
@@ -119,7 +128,7 @@
   .sheet-x svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;stroke-linecap:round}
   .sheet-input{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
   .sheet-input input{background:var(--surface2);border:1px solid var(--line)}
-  .foodMatches{background:var(--surface2);border:1px solid var(--line);border-radius:10px;height:220px;overflow-y:auto;margin-top:-4px;margin-bottom:8px;transition:opacity .2s}
+  .foodMatches{background:var(--surface2);border:1px solid var(--line);border-radius:10px;max-height:45vh;overflow-y:auto;margin-top:6px;margin-bottom:8px;transition:opacity .2s}
   .foodMatches.hidden{visibility:hidden;pointer-events:none;opacity:0}
   .foodMatch{padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
   .foodMatch:last-child{border-bottom:none}
@@ -151,7 +160,7 @@
     .matchsep{padding:6px 12px;font-size:10px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--line);background:var(--surface)}
   .match-loading{padding:10px 12px;font-size:12px;color:var(--faint)}
   /* serving picker */
-  .servpanel{margin-top:0;padding:14px 0 4px;border-top:1px solid var(--line)}
+  .servpanel{margin-top:0;padding:4px 0}
   .servpanel.hidden{display:none}
   .servfood{font-size:13px;font-weight:600;margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .servpresets{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
@@ -508,7 +517,7 @@
   <button data-pg="settings"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings</button>
 </nav>
 
-<!-- add pop-up sheet -->
+<!-- add launcher sheet (floats above nav) -->
 <div id="sheet" class="sheet hidden">
   <div class="sheet-bg" id="sheetBg"></div>
   <div class="sheet-card">
@@ -522,22 +531,10 @@
       <button class="mealtab" data-meal="Snack">🍎 Snack</button>
     </div>
 
-    <div class="sheet-input hidden" id="searchBar">
-      <input type="text" id="foodInput" placeholder="Search food…" enterkeyhint="search">
-      <div class="search-hint" id="searchHint">Try: "Rokeby choc 425ml" · "200g white rice cooked" · "2 scrambled eggs"</div>
-    </div>
-    <div id="foodMatches" class="foodMatches hidden"></div>
-    <button class="addbtn" id="addBtn" style="margin-top:8px"><svg class="svi" viewBox="0 0 24 24" style="margin-right:6px"><path d="M5 3l14 9-14 9V3z"/></svg>Estimate</button>
-
     <div class="tilerow" id="tileRow">
-      <label class="tile icon-only" id="photoBtn" for="foodPhoto" title="Photo">
+      <button class="tile icon-only" id="smartCameraBtn" title="Camera">
         <span class="tic"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
-        <input type="file" accept="image/*" id="foodPhoto">
-      </label>
-      <label class="tile icon-only" id="scanLabelBtn" for="labelPhoto" title="Scan label">
-        <span class="tic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h6M7 16h8"/></svg></span>
-        <input type="file" accept="image/*" id="labelPhoto">
-      </label>
+      </button>
       <button class="tile icon-only" id="quickTile" title="Quick add">
         <span class="tic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
       </button>
@@ -548,34 +545,70 @@
         <span class="tic"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
       </button>
     </div>
+  </div>
+</div>
 
-    <div id="quickPanel" class="panel hidden">
-      <div class="er1" style="margin-bottom:8px"><input type="text" id="qa-name" placeholder="Food name"></div>
-      <div class="ermac">
-        <div class="m"><label>CAL</label><input type="number" inputmode="numeric" id="qa-cal"></div>
-        <div class="m"><label>P</label><input type="number" inputmode="numeric" id="qa-p"></div>
-        <div class="m"><label>C</label><input type="number" inputmode="numeric" id="qa-c"></div>
-        <div class="m"><label>F</label><input type="number" inputmode="numeric" id="qa-f"></div>
-      </div>
-      <button class="addbtn" id="qaSave" style="margin-top:10px">Add manually</button>
+<!-- camera mode picker -->
+<div id="cameraPickerOverlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6)">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;padding:20px 16px 36px">
+    <div style="width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 20px"></div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px;text-align:center">What are you photographing?</div>
+    <label style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface2);border-radius:14px;margin-bottom:10px;cursor:pointer" for="mealPhoto">
+      <span style="font-size:28px">🍽️</span>
+      <div><div style="font-weight:600;font-size:15px">My meal</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Claude estimates what's on the plate and logs it</div></div>
+      <input type="file" accept="image/*" id="mealPhoto" style="display:none">
+    </label>
+    <label style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface2);border-radius:14px;cursor:pointer" for="labelPhoto">
+      <span style="font-size:28px">🏷️</span>
+      <div><div style="font-weight:600;font-size:15px">Nutrition label</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Claude reads exact values and saves to My Foods</div></div>
+      <input type="file" accept="image/*" id="labelPhoto" style="display:none">
+    </label>
+    <button onclick="document.getElementById('cameraPickerOverlay').style.display='none'" style="width:100%;margin-top:14px;padding:14px;border-radius:13px;background:var(--surface2);color:var(--muted);font-size:15px;font-weight:600">Cancel</button>
+  </div>
+</div>
+
+<!-- FULL PAGE: search -->
+<div class="fullpage hidden" id="fp-search">
+  <div class="fp-head"><button class="fp-back" data-fpback="1"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><h3>Search food</h3></div>
+  <div class="fp-body">
+    <div class="sheet-input" id="searchBar">
+      <input type="text" id="foodInput" placeholder="Search food or describe a meal…" enterkeyhint="search">
+      <div class="search-hint" id="searchHint">Try: "Rokeby choc 425ml" · "200g white rice cooked" · "2 scrambled eggs"</div>
     </div>
+    <div id="foodMatches" class="foodMatches hidden"></div>
+    <button class="addbtn" id="addBtn" style="margin-top:8px"><svg class="svi" viewBox="0 0 24 24" style="margin-right:6px"><path d="M5 3l14 9-14 9V3z"/></svg>Estimate</button>
+  </div>
+</div>
 
-    <div id="weightPanel" class="panel hidden">
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="number" inputmode="decimal" id="wt-kg" placeholder="Weight in kg">
-        <button class="addbtn" id="wtSave" style="width:auto;padding:14px 20px">Log</button>
-      </div>
+<!-- FULL PAGE: quick add -->
+<div class="fullpage hidden" id="fp-quick">
+  <div class="fp-head"><button class="fp-back" data-fpback="1"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><h3>Quick add</h3></div>
+  <div class="fp-body">
+    <div class="er1" style="margin-bottom:10px"><input type="text" id="qa-name" placeholder="Food name"></div>
+    <div class="ermac">
+      <div class="m"><label>CAL</label><input type="number" inputmode="numeric" id="qa-cal"></div>
+      <div class="m"><label>P</label><input type="number" inputmode="numeric" id="qa-p"></div>
+      <div class="m"><label>C</label><input type="number" inputmode="numeric" id="qa-c"></div>
+      <div class="m"><label>F</label><input type="number" inputmode="numeric" id="qa-f"></div>
     </div>
+    <button class="addbtn" id="qaSave" style="margin-top:14px">Add manually</button>
+  </div>
+</div>
 
-    <div id="favPanel" class="panel hidden">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-size:13px;font-weight:600">Saved favourites</span>
-        <span style="font-size:11px;color:var(--muted)">Tap to add • Long-press to delete</span>
-      </div>
-      <div id="favList"><div class="empty" style="font-size:12px">No favourites yet.<br>Add food then tap ★ to save it.</div></div>
-    </div>
+<!-- FULL PAGE: favourites -->
+<div class="fullpage hidden" id="fp-favs">
+  <div class="fp-head"><button class="fp-back" data-fpback="1"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><h3>Favourites</h3></div>
+  <div class="fp-body">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Tap a favourite to choose a serving</div>
+    <div id="favList"><div class="empty" style="font-size:12px">No favourites yet.<br>Add food then tap ★ to save it.</div></div>
+  </div>
+</div>
 
-    <div id="servPanel" class="servpanel hidden">
+<!-- FULL PAGE: serving picker -->
+<div class="fullpage hidden" id="fp-serving">
+  <div class="fp-head"><button class="fp-back" data-fpback="1"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><h3>Choose serving</h3></div>
+  <div class="fp-body">
+    <div id="servPanel" class="servpanel">
       <div class="servfood" id="servFoodName"></div>
       <div class="servpresets" id="servPresets"></div>
       <div class="servrow">
@@ -590,21 +623,24 @@
       </div>
       <button class="addbtn" id="servAdd">Add this serving</button>
     </div>
+  </div>
+</div>
 
-    <!-- label scan confirm panel -->
-    <div id="labelConfirmPanel" class="servpanel hidden">
-      <div style="font-size:12px;color:var(--teal);font-weight:600;margin-bottom:10px">✓ Label scanned — confirm values (per 100g)</div>
-      <div class="er1" style="margin-bottom:8px"><input type="text" id="lc-name" placeholder="Product name"></div>
-      <div class="ermac" style="margin-bottom:10px">
-        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">CAL</label><input type="number" inputmode="numeric" id="lc-cal" style="font-size:13px;padding:8px 4px;text-align:center"></div>
-        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">P</label><input type="number" inputmode="numeric" id="lc-p" style="font-size:13px;padding:8px 4px;text-align:center"></div>
-        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">C</label><input type="number" inputmode="numeric" id="lc-c" style="font-size:13px;padding:8px 4px;text-align:center"></div>
-        <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">F</label><input type="number" inputmode="numeric" id="lc-f" style="font-size:13px;padding:8px 4px;text-align:center"></div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="addbtn" id="lcSave" style="flex:1">Save to My Foods</button>
-        <button class="addbtn" id="lcSkip" style="flex:0 0 auto;background:var(--surface2);color:var(--text);width:auto;padding:14px 16px">Skip</button>
-      </div>
+<!-- FULL PAGE: label confirm -->
+<div class="fullpage hidden" id="fp-label">
+  <div class="fp-head"><button class="fp-back" data-fpback="1"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><h3>Confirm label</h3></div>
+  <div class="fp-body">
+    <div style="font-size:12px;color:var(--teal);font-weight:600;margin-bottom:12px">✓ Label scanned — confirm values (per 100g)</div>
+    <div class="er1" style="margin-bottom:10px"><input type="text" id="lc-name" placeholder="Product name"></div>
+    <div class="ermac" style="margin-bottom:12px">
+      <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">CAL</label><input type="number" inputmode="numeric" id="lc-cal" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+      <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">P</label><input type="number" inputmode="numeric" id="lc-p" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+      <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">C</label><input type="number" inputmode="numeric" id="lc-c" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+      <div class="m"><label style="display:block;font-size:10px;color:var(--faint);margin-bottom:3px;text-align:center">F</label><input type="number" inputmode="numeric" id="lc-f" style="font-size:13px;padding:8px 4px;text-align:center"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="addbtn" id="lcSave" style="flex:1">Save to My Foods</button>
+      <button class="addbtn" id="lcSkip" style="flex:0 0 auto;background:var(--surface2);color:var(--text);width:auto;padding:14px 16px">Skip</button>
     </div>
   </div>
 </div>
@@ -911,7 +947,7 @@ function openServPicker(item) {
   presetsEl.children[0]?.classList.add('on');
   updateServMacros(defaultV);
 
-  document.getElementById('servPanel').classList.remove('hidden');
+  openFP('fp-serving');
   inputEl.focus();
 }
 
@@ -951,6 +987,7 @@ document.getElementById('servAdd').onclick = () => {
   }
   save(); renderToday(); renderTrends();
   _servItem = null;
+  closeFPs();
   closeSheet();
   toast('Added ' + entry.calories + ' cal ✓');
 };
@@ -1125,11 +1162,7 @@ function showLabelConfirm(food) {
   document.getElementById('lc-p').value = Math.round((food.protein || 0) * 10) / 10;
   document.getElementById('lc-c').value = Math.round((food.carbs || 0) * 10) / 10;
   document.getElementById('lc-f').value = Math.round((food.fat || 0) * 10) / 10;
-  document.getElementById('labelConfirmPanel').classList.remove('hidden');
-  document.getElementById('servPanel').classList.add('hidden');
-  document.getElementById('foodMatches').classList.add('hidden');
-  const hint = document.getElementById('searchHint');
-  if (hint) hint.classList.add('hidden');
+  openFP('fp-label');
 }
 async function readGarmin(file){
   loading('Reading Garmin…');
@@ -1303,10 +1336,14 @@ function renderToday(){
     });
   });
   list.innerHTML=html;
-  list.querySelectorAll('.fav-star').forEach(b=>b.onclick=()=>{
-    const x=day.foods[+b.dataset.fi];
-    if(b.classList.contains('saved')){removeFav(x.name);b.classList.remove('saved');b.textContent='☆';}
-    else{saveFav({name:x.name,calories:Math.round(x.calories),protein:Math.round(x.protein*10)/10,carbs:Math.round(x.carbs*10)/10,fat:Math.round(x.fat*10)/10});b.classList.add('saved');b.textContent='★';toast('Saved to favourites ★');}
+  list.querySelectorAll('.fav-star').forEach(b=>{
+    b.addEventListener('touchend', e=>{
+      e.stopPropagation();
+      e.preventDefault();
+      const x=day.foods[+b.dataset.fi];
+      if(b.classList.contains('saved')){removeFav(x.name);b.classList.remove('saved');b.textContent='☆';}
+      else{saveFav({name:x.name,calories:Math.round(x.calories),protein:Math.round(x.protein*10)/10,carbs:Math.round(x.carbs*10)/10,fat:Math.round(x.fat*10)/10});b.classList.add('saved');b.textContent='★';toast('Saved to favourites ★');}
+    });
   });
   list.querySelectorAll('.fa-del').forEach(b=>b.onclick=()=>{ensureDay(viewDate).foods.splice(+b.dataset.i,1);editIdx=-1;save();renderToday();renderTrends()});
   list.querySelectorAll('.fa-edit').forEach(b=>b.onclick=()=>{editIdx=+b.dataset.e;renderToday()});
@@ -1490,21 +1527,12 @@ document.getElementById('wipeData').onclick=()=>{if(confirm('Erase all logged fo
 function openSheet(){document.getElementById('sheet').classList.remove('hidden')}
 function closeSheet(){
   document.getElementById('sheet').classList.add('hidden');
-  document.getElementById('quickPanel').classList.add('hidden');
-  document.getElementById('weightPanel').classList.add('hidden');
   document.getElementById('quickTile').classList.remove('on');
-  document.getElementById('quickTile').classList.remove('on');
-  document.getElementById('foodInput').value='';
-  document.getElementById('foodMatches').classList.add('hidden');
-  document.getElementById('foodMatches').innerHTML='';
+  const fi=document.getElementById('foodInput');if(fi)fi.value='';
+  const fm=document.getElementById('foodMatches');if(fm){fm.classList.add('hidden');fm.innerHTML='';}
   const _hint=document.getElementById('searchHint');if(_hint)_hint.classList.remove('hidden');
-  document.getElementById('tileRow').classList.remove('hidden-tiles');
-  document.getElementById('searchBar').classList.add('hidden');
-  document.getElementById('servPanel').classList.add('hidden');
-  document.getElementById('servGrams').value='';
-  document.getElementById('favPanel').classList.add('hidden');
-  document.getElementById('quickPanel').classList.add('hidden');
-  document.getElementById('labelConfirmPanel').classList.add('hidden');
+  const sg=document.getElementById('servGrams');if(sg)sg.value='';
+  closeFPs();
   lastSearchQuery='';
   _servItem=null;
 }
@@ -1512,8 +1540,8 @@ document.getElementById('fabBtn').onclick=openSheet;
 document.getElementById('sheetX').onclick=closeSheet;
 document.getElementById('sheetBg').onclick=closeSheet;
 document.getElementById('quickTile').onclick=()=>{
-  const pe=document.getElementById('quickPanel');
-  pe.classList.toggle('hidden');document.getElementById('quickTile').classList.toggle('on',!pe.classList.contains('hidden'));
+  openFP('fp-quick');
+  setTimeout(()=>document.getElementById('qa-name').focus(),80);
 };
 
 /* ---------------- food add ---------------- */
@@ -1525,19 +1553,23 @@ async function addFood(){
 }
 document.getElementById('addBtn').onclick=addFood;
 document.getElementById('foodInput').addEventListener('keydown',e=>{if(e.key==='Enter')addFood()});
+/* ---------------- full page helpers ---------------- */
+function openFP(id){
+  document.querySelectorAll('.fullpage').forEach(p=>p.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+function closeFPs(){
+  document.querySelectorAll('.fullpage').forEach(p=>p.classList.add('hidden'));
+}
+document.querySelectorAll('[data-fpback]').forEach(b=>b.onclick=()=>closeFPs());
+
 document.getElementById('searchTile').onclick=()=>{
-  const bar=document.getElementById('searchBar');
-  const tileRow=document.getElementById('tileRow');
-  bar.classList.remove('hidden');
-  tileRow.classList.add('hidden-tiles');
-  setTimeout(()=>document.getElementById('foodInput').focus(),50);
+  openFP('fp-search');
+  setTimeout(()=>document.getElementById('foodInput').focus(),80);
 };
 document.getElementById('favTile').onclick=()=>{
-  const fp=document.getElementById('favPanel');
-  const isHidden=fp.classList.contains('hidden');
-  fp.classList.toggle('hidden',!isHidden);
-  document.getElementById('favTile').classList.toggle('on',isHidden);
-  if(isHidden)renderFavs();
+  renderFavs();
+  openFP('fp-favs');
 };
 document.getElementById('foodInput').addEventListener('input',e=>{
   clearTimeout(offDebounce);
@@ -1545,13 +1577,18 @@ document.getElementById('foodInput').addEventListener('input',e=>{
   if(!q){document.getElementById('foodMatches').classList.add('hidden');return;}
   doFoodSearch(q);
 });
-document.getElementById('foodPhoto').onchange=async e=>{
+document.getElementById('smartCameraBtn').onclick=()=>{
+  document.getElementById('cameraPickerOverlay').style.display='block';
+};
+document.getElementById('mealPhoto').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;e.target.value='';
+  document.getElementById('cameraPickerOverlay').style.display='none';
   try{const r=await analyzeFoodPhoto(f);r.meal=currentMeal;ensureDay(viewDate).foods.push(r);save();renderToday();renderTrends();closeSheet();toast('Added '+esc(r.name)+' ✓')}
   catch(err){toast(err.message.includes('API')?err.message:'Couldn’t read that photo',1)}
 };
 document.getElementById('labelPhoto').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;e.target.value='';
+  document.getElementById('cameraPickerOverlay').style.display='none';
   try{
     const r=await scanNutritionLabel(f);
     toast('');
@@ -1563,14 +1600,12 @@ document.getElementById('lcSave').onclick=()=>{
   if(!name){toast('Enter a product name',1);return;}
   const food={name,calories:+document.getElementById('lc-cal').value||0,protein:+document.getElementById('lc-p').value||0,carbs:+document.getElementById('lc-c').value||0,fat:+document.getElementById('lc-f').value||0,source:'custom'};
   saveCustomFood(food);
-  document.getElementById('labelConfirmPanel').classList.add('hidden');
   openServPicker({...food});
   toast('Saved to My Foods ✓');
 };
 document.getElementById('lcSkip').onclick=()=>{
   const name=document.getElementById('lc-name').value.trim()||'Scanned food';
   const food={name,calories:+document.getElementById('lc-cal').value||0,protein:+document.getElementById('lc-p').value||0,carbs:+document.getElementById('lc-c').value||0,fat:+document.getElementById('lc-f').value||0,source:'scanned'};
-  document.getElementById('labelConfirmPanel').classList.add('hidden');
   openServPicker({...food});
 };
 /* quick add (manual macros) */
@@ -1584,17 +1619,10 @@ document.getElementById('qaSave').onclick=()=>{
   ensureDay(viewDate).foods.push({name,calories:cal,protein:p,carbs:c,fat:fat,meal:currentMeal});
   save();renderToday();renderTrends();
   ['qa-name','qa-cal','qa-p','qa-c','qa-f'].forEach(id=>document.getElementById(id).value='');
-  closeSheet();toast('Added '+cal+' cal ✓');
+  closeFPs();closeSheet();toast('Added '+cal+' cal ✓');
 };
 /* quick weight log */
-document.getElementById('wtSave').onclick=()=>{
-  const kg=+(+document.getElementById('wt-kg').value).toFixed(2);
-  if(isNaN(kg)||kg<=0||kg>500){toast('Enter a valid weight',1);return}
-  const today=todayISO();
-  S.weights=S.weights.filter(w=>w.date!==today);S.weights.push({date:today,kg});
-  save();renderTrends();document.getElementById('wt-kg').value='';
-  closeSheet();toast('Weight logged: '+kg+'kg ✓');
-};
+/* weight logging moved to Trends page */
 
 /* ---------------- CSV bulk import ---------------- */
 function parseCSV(text) {
