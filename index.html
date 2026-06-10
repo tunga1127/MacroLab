@@ -524,10 +524,10 @@
 
     <div class="sheet-input hidden" id="searchBar">
       <input type="text" id="foodInput" placeholder="Search food…" enterkeyhint="search">
-      <div id="foodMatches" class="foodMatches hidden"></div>
       <div class="search-hint" id="searchHint">Try: "Rokeby choc 425ml" · "200g white rice cooked" · "2 scrambled eggs"</div>
-      <button class="addbtn" id="addBtn" style="margin-top:8px"><svg class="svi" viewBox="0 0 24 24" style="margin-right:6px"><path d="M5 3l14 9-14 9V3z"/></svg>Estimate</button>
     </div>
+    <div id="foodMatches" class="foodMatches hidden"></div>
+    <button class="addbtn" id="addBtn" style="margin-top:8px"><svg class="svi" viewBox="0 0 24 24" style="margin-right:6px"><path d="M5 3l14 9-14 9V3z"/></svg>Estimate</button>
 
     <div class="tilerow" id="tileRow">
       <label class="tile icon-only" id="photoBtn" for="foodPhoto" title="Photo">
@@ -1531,6 +1531,13 @@ document.getElementById('searchTile').onclick=()=>{
   bar.classList.remove('hidden');
   tileRow.classList.add('hidden-tiles');
   setTimeout(()=>document.getElementById('foodInput').focus(),50);
+};
+document.getElementById('favTile').onclick=()=>{
+  const fp=document.getElementById('favPanel');
+  const isHidden=fp.classList.contains('hidden');
+  fp.classList.toggle('hidden',!isHidden);
+  document.getElementById('favTile').classList.toggle('on',isHidden);
+  if(isHidden)renderFavs();
 };
 document.getElementById('foodInput').addEventListener('input',e=>{
   clearTimeout(offDebounce);
