@@ -1703,8 +1703,14 @@ function closeSheet(){
   _servItem=null;
 }
 document.getElementById('fabBtn').onclick=()=>{
-  openSheet();
-  setTimeout(()=>{const inp=document.getElementById('foodInput');if(inp)inp.focus();},80);
+  const sheet=document.getElementById('sheet');
+  sheet.classList.remove('hidden');
+  const inp=document.getElementById('foodInput');
+  if(inp){
+    // Force layout so element is visible before focus (required for iOS keyboard)
+    void inp.offsetHeight;
+    inp.focus();
+  }
 };
 document.getElementById('sheetX').onclick=closeSheet;
 document.getElementById('sheetBg').onclick=closeSheet;
