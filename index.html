@@ -106,11 +106,11 @@
   .iconbtn:active{transform:scale(.92)}
 
   /* add sheet — full screen */
-  .sheet{position:fixed;inset:0;z-index:80}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;justify-content:center;align-items:flex-end}
   .sheet.hidden{visibility:hidden;pointer-events:none}
-  .sheet.hidden .sheet-card{transform:translateY(100%);transition:none}
-  .sheet-bg{display:none}
-  .sheet-card{position:absolute;inset:0;max-width:520px;margin:0 auto;background:var(--surface);padding:max(20px,env(safe-area-inset-top)) 18px max(24px,env(safe-area-inset-bottom));animation:slideup .26s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column;overflow-y:auto}
+  .sheet.hidden .sheet-card{transform:translateY(100%)}
+  .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:-1}
+  .sheet-card{width:100%;max-width:520px;background:var(--surface);padding:20px 18px max(24px,env(safe-area-inset-bottom));animation:slideup .26s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column;border-radius:20px 20px 0 0;max-height:80vh;overflow-y:auto}
   /* full-screen pages for add actions */
   .fullpage{position:fixed;inset:0;z-index:140;background:var(--bg);display:flex;flex-direction:column;animation:slidein .22s cubic-bezier(.2,.9,.3,1)}
   .fullpage.hidden{display:none}
