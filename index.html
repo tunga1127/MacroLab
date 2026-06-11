@@ -768,8 +768,69 @@ function searchCustomFoods(query) {
 /* ---- Smart AI food search ---- */
 // Handles both branded product lookup AND generic food estimation in one call.
 // Returns per-100g results for database-style items, or per-serving for meal descriptions.
+/* ---- Nutrition result cache ---- */
+const NUTRITION_CACHE_KEY = 'macrolab_nutrition_cache';
+const NUTRITION_CACHE_MAX = 500; // max entries to store
+const NUTRITION_CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
+
+function _loadNutritionCache() {
+  try {
+    const raw = localStorage.getItem(NUTRITION_CACHE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+
+function _saveNutritionCache(cache) {
+  try {
+    // Trim to max size if needed (evict oldest entries)
+    const entries = Object.entries(cache);
+    if (entries.length > NUTRITION_CACHE_MAX) {
+      entries.sort((a,b) => (a[1].ts||0) - (b[1].ts||0));
+      const trimmed = Object.fromEntries(entries.slice(entries.length - NUTRITION_CACHE_MAX));
+      localStorage.setItem(NUTRITION_CACHE_KEY, JSON.stringify(trimmed));
+    } else {
+      localStorage.setItem(NUTRITION_CACHE_KEY, JSON.stringify(cache));
+    }
+  } catch(e) { /* storage full, skip */ }
+}
+
+function _nutritionCacheKey(query) {
+  return query.toLowerCase().trim().replace(/\s+/g,' ');
+}
+
+function getCachedNutrition(query) {
+  const cache = _loadNutritionCache();
+  const key = _nutritionCacheKey(query);
+  const entry = cache[key];
+  if (!entry) return null;
+  // Check TTL
+  if (Date.now() - (entry.ts||0) > NUTRITION_CACHE_TTL) {
+    delete cache[key];
+    _saveNutritionCache(cache);
+    return null;
+  }
+  return entry.results;
+}
+
+function setCachedNutrition(query, results) {
+  if (!results || !results.length) return; // don't cache empty results
+  const cache = _loadNutritionCache();
+  const key = _nutritionCacheKey(query);
+  cache[key] = { results, ts: Date.now() };
+  _saveNutritionCache(cache);
+}
+
 async function searchClaudeProducts(query) {
   if(!S.apiKey) return [];
+
+  // Check cache first
+  const cached = getCachedNutrition(query);
+  if (cached) {
+    console.log('[Cache HIT]', query);
+    return cached;
+  }
+  console.log('[Cache MISS]', query);
+
   try {
     const sys = 'You are an Australian nutrition database. Return food matches as a JSON array. ' +
       'STRICT RULES: ALL values MUST be per 100g (or per 100ml for drinks). The user picks their serving size separately — you only provide per-100g base values. ' +
@@ -783,7 +844,7 @@ async function searchClaudeProducts(query) {
     const match = clean.match(/\[[\s\S]*\]/);
     if(!match) return [];
     const arr = JSON.parse(match[0]);
-    return arr
+    const arr2 = arr
       .filter(x=>x.name&&(x.calories>0||x.protein>0))
       .map(x=>({
         name: String(x.name),
@@ -795,6 +856,8 @@ async function searchClaudeProducts(query) {
         per: 'per 100g'
       }))
       .slice(0,5);
+    setCachedNutrition(query, arr2);
+    return arr2;
   } catch(e) {
     return [];
   }
@@ -918,10 +981,12 @@ function isDrink(name) {
   const n = name.toLowerCase();
   // Explicitly NOT drinks even though they contain drink-like words
   if(n.includes('yogh') || n.includes('protein bar') || n.includes('powder')) return false;
+  // Use word-boundary checks for short words that can appear inside other words (e.g. "tea" in "steak")
+  const hasWord = (w) => new RegExp('\\b' + w + '\\b').test(n);
   return n.includes('smoothie') || n.includes('shake') || n.includes('drink') ||
     n.includes('juice') || n.includes('milk') || n.includes('water') ||
     n.includes('cola') || n.includes('pepsi') || n.includes('energy') ||
-    n.includes('coffee') || n.includes('tea') || n.includes('gatorade') ||
+    n.includes('coffee') || hasWord('tea') || n.includes('gatorade') ||
     n.includes('powerade') || n.includes('up&go') || n.includes('up go') ||
     n.includes('milo') || n.includes('kombucha') || n.includes('kefir') ||
     n.includes('rokeby');
@@ -956,7 +1021,8 @@ function getPresets(name) {
   if(n.includes('butter'))                       return [5,10,15];
   // Meat
   if(n.includes('chicken') || n.includes('beef') || n.includes('pork') || n.includes('fish') ||
-     n.includes('salmon') || n.includes('tuna') || n.includes('turkey') || n.includes('mince')) return [100,120,150,200];
+     n.includes('salmon') || n.includes('tuna') || n.includes('turkey') || n.includes('mince') ||
+     n.includes('steak') || n.includes('lamb') || n.includes('venison')) return [100,120,150,200];
   if(n.includes('ham') || n.includes('bacon') || n.includes('salami')) return [30,50,80];
   // Carbs
   if(n.includes('oat') || n.includes('cereal') || n.includes('muesli')) return [30,45,60];
