@@ -107,7 +107,8 @@
 
   /* add sheet — full screen */
   .sheet{position:fixed;inset:0;z-index:80}
-  .sheet.hidden{display:none}
+  .sheet.hidden{visibility:hidden;pointer-events:none}
+  .sheet.hidden .sheet-card{transform:translateY(100%);transition:none}
   .sheet-bg{display:none}
   .sheet-card{position:absolute;inset:0;max-width:520px;margin:0 auto;background:var(--surface);padding:max(20px,env(safe-area-inset-top)) 18px max(24px,env(safe-area-inset-bottom));animation:slideup .26s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column;overflow-y:auto}
   /* full-screen pages for add actions */
@@ -1694,7 +1695,7 @@ function openSheet(){document.getElementById('sheet').classList.remove('hidden')
 function closeSheet(){
   document.getElementById('sheet').classList.add('hidden');
   document.getElementById('quickTile').classList.remove('on');
-  const fi=document.getElementById('foodInput');if(fi)fi.value='';
+  const fi=document.getElementById('foodInput');if(fi){fi.value='';fi.blur();}
   const fm=document.getElementById('foodMatches');if(fm){fm.classList.add('hidden');fm.innerHTML='';}
   const _hint=document.getElementById('searchHint');if(_hint)_hint.classList.remove('hidden');
   const sg=document.getElementById('servGrams');if(sg)sg.value='';
@@ -1705,12 +1706,7 @@ function closeSheet(){
 document.getElementById('fabBtn').onclick=()=>{
   const sheet=document.getElementById('sheet');
   sheet.classList.remove('hidden');
-  const inp=document.getElementById('foodInput');
-  if(inp){
-    // Force layout so element is visible before focus (required for iOS keyboard)
-    void inp.offsetHeight;
-    inp.focus();
-  }
+  document.getElementById('foodInput').focus();
 };
 document.getElementById('sheetX').onclick=closeSheet;
 document.getElementById('sheetBg').onclick=closeSheet;
