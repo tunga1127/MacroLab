@@ -250,6 +250,13 @@
   @keyframes sp{to{transform:rotate(360deg)}}
   .banner{background:linear-gradient(135deg,rgba(255,107,53,.14),rgba(45,212,191,.1));border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px}
   .banner b{color:var(--text)}
+  .collapsible-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;-webkit-user-select:none;padding:2px 0}
+  .collapsible-header h3{font-size:15px;font-weight:700;margin:0}
+  .collapsible-status{font-size:12px;color:var(--teal);font-weight:500;flex:1;margin:0 10px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .collapsible-status.disconnected{color:var(--faint)}
+  .collapsible-chevron{width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;transition:transform .2s}
+  .collapsible-body{overflow:hidden;transition:max-height .3s ease,opacity .2s;max-height:0;opacity:0;pointer-events:none}
+  .collapsible-body.open{max-height:600px;opacity:1;pointer-events:auto}
 
   /* food edit */
   .food .edit{color:var(--faint);padding:4px 5px;display:grid;place-items:center}
@@ -479,33 +486,13 @@ function searchAUFoods(query) {
   <div class="wrap" style="padding-top:8px">
     <div class="pageh"><h2>Settings</h2></div>
 
-    <div class="banner">
-      <b>How this works:</b> the app calls the Claude API with <b>your own key</b>. Add your Supabase credentials to sync everything to the cloud — so reinstalling the app never loses your data.
-    </div>
-
     <div class="card">
-      <div class="field">
-        <label>Supabase Project URL</label>
-        <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co" autocomplete="off" autocorrect="off" autocapitalize="none">
+      <div class="twocol">
+        <div class="field"><label>Calorie target</label><input type="number" id="calGoal" inputmode="numeric"></div>
+        <div class="field"><label>Protein target (g)</label><input type="number" id="proGoal" inputmode="numeric"></div>
       </div>
-      <div class="field">
-        <label>Supabase Anon Key</label>
-        <input type="password" id="sbKey" placeholder="sb_publishable_...">
-      </div>
-      <div class="field">
-        <label>Sync Username</label>
-        <input type="text" id="sbUsername" placeholder="e.g. tunga or your email" autocomplete="off" autocorrect="off" autocapitalize="none">
-        <div class="hint">Your permanent ID for cloud sync — pick anything you'll always remember (email, nickname, etc). This is how your data is found across devices. Write it down somewhere safe.</div>
-      </div>
-      <button class="btn" id="sbConnect" style="margin-bottom:0">Connect Supabase</button>
-      <div id="sbStatus" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center"></div>
-    </div>
-
-    <div class="card">
-      <div class="field">
-        <label>Anthropic API key</label>
-        <input type="password" id="apiKey" placeholder="sk-ant-...">
-        <div class="hint">Stored in Supabase (if connected) so you never lose it. Get a key at console.anthropic.com.</div>
+      <div class="field"><label>TDEE (kcal burned/day)</label><input type="number" id="tdeeInput" inputmode="numeric">
+        <div class="hint">Set from your Garmin weekly average, or let the Import tab fill it. Your flat daily target already averages in your run days.</div>
       </div>
       <div class="field">
         <label>Model</label>
@@ -515,19 +502,41 @@ function searchAUFoods(query) {
           <option value="claude-opus-4-7">Opus 4.7 — most accurate, priciest</option>
           <option value="claude-opus-4-8">Opus 4.8 — newest flagship</option>
         </select>
-        <div class="hint">Haiku handles typed food & clean screenshots cheaply. Bump to Sonnet if a food photo gets misjudged. Strings verified current as of May 2026 — check docs.claude.com if one ever errors.</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="twocol">
-        <div class="field"><label>Calorie target</label><input type="number" id="calGoal" inputmode="numeric"></div>
-        <div class="field"><label>Protein target (g)</label><input type="number" id="proGoal" inputmode="numeric"></div>
-      </div>
-      <div class="field"><label>TDEE (kcal burned/day)</label><input type="number" id="tdeeInput" inputmode="numeric">
-        <div class="hint">Set from your Garmin weekly average, or let the Import tab fill it. Your flat daily target already averages in your run days.</div>
+        <div class="hint">Haiku handles typed food & clean screenshots cheaply. Bump to Sonnet if a food photo gets misjudged.</div>
       </div>
       <button class="btn" id="saveSettings">Save settings</button>
+    </div>
+
+    <!-- Collapsible Supabase + API card -->
+    <div class="card">
+      <div class="collapsible-header" id="sbToggle">
+        <h3>Cloud sync & API</h3>
+        <span class="collapsible-status disconnected" id="sbStatusBadge">Not connected</span>
+        <svg class="collapsible-chevron" id="sbChevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="collapsible-body" id="sbBody">
+        <div style="height:14px"></div>
+        <div class="field">
+          <label>Supabase Project URL</label>
+          <input type="text" id="sbUrl" placeholder="https://xxxx.supabase.co" autocomplete="off" autocorrect="off" autocapitalize="none">
+        </div>
+        <div class="field">
+          <label>Supabase Anon Key</label>
+          <input type="password" id="sbKey" placeholder="sb_publishable_...">
+        </div>
+        <div class="field">
+          <label>Sync Username</label>
+          <input type="text" id="sbUsername" placeholder="e.g. tunga or your email" autocomplete="off" autocorrect="off" autocapitalize="none">
+          <div class="hint">Your permanent ID for cloud sync — pick anything you'll always remember. Write it down somewhere safe.</div>
+        </div>
+        <div class="field">
+          <label>Anthropic API key</label>
+          <input type="password" id="apiKey" placeholder="sk-ant-...">
+          <div class="hint">Stored in Supabase so you never lose it. Get a key at console.anthropic.com.</div>
+        </div>
+        <button class="btn" id="sbConnect" style="margin-bottom:0">Connect Supabase</button>
+        <div id="sbStatus" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center"></div>
+      </div>
     </div>
 
     <div class="card">
@@ -1581,9 +1590,37 @@ function fillSettings(){
   document.getElementById('sbKey').value=S.sbKey||'';
   document.getElementById('sbUsername').value=S.sbUsername||'';
   const statusEl=document.getElementById('sbStatus');
-  if(S.sbUrl&&S.sbKey&&S.sbUsername) statusEl.textContent='✓ Connected as "'+S.sbUsername+'"';
-  else statusEl.textContent='';
+  const badge=document.getElementById('sbStatusBadge');
+  const body=document.getElementById('sbBody');
+  const chevron=document.getElementById('sbChevron');
+  if(S.sbUrl&&S.sbKey&&S.sbUsername){
+    statusEl.textContent='✓ Connected as "'+S.sbUsername+'"';
+    badge.textContent='✓ '+S.sbUsername;
+    badge.classList.remove('disconnected');
+  } else {
+    statusEl.textContent='';
+    badge.textContent='Not connected';
+    badge.classList.add('disconnected');
+    body.classList.add('open');
+    chevron.style.transform='rotate(180deg)';
+  }
 }
+document.getElementById('sbToggle').addEventListener('click',()=>{
+  const body=document.getElementById('sbBody');
+  const chevron=document.getElementById('sbChevron');
+  const open=body.classList.toggle('open');
+  chevron.style.transform=open?'rotate(180deg)':'';
+});
+
+
+
+
+
+
+
+
+
+
 document.getElementById('sbConnect').onclick=async()=>{
   const url=document.getElementById('sbUrl').value.trim();
   const key=document.getElementById('sbKey').value.trim();
@@ -1682,11 +1719,7 @@ function closeSheet(){
 }
 document.getElementById('fabBtn').onclick=()=>{
   openSheet();
-  openFP('fp-search');
-  setTimeout(()=>{
-    const inp=document.getElementById('foodInput');
-    if(inp){inp.focus();inp.click();}
-  },50);
+  setTimeout(()=>{const inp=document.getElementById('foodInput');if(inp)inp.focus();},80);
 };
 document.getElementById('sheetX').onclick=closeSheet;
 document.getElementById('sheetBg').onclick=closeSheet;
