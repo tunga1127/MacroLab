@@ -256,7 +256,7 @@
   .collapsible-status.disconnected{color:var(--faint)}
   .collapsible-chevron{width:20px;height:20px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;transition:transform .2s}
   .collapsible-body{overflow:hidden;transition:max-height .3s ease,opacity .2s;max-height:0;opacity:0;pointer-events:none}
-  .collapsible-body.open{max-height:600px;opacity:1;pointer-events:auto}
+  .collapsible-body.open{max-height:700px;opacity:1;pointer-events:auto}
 
   /* food edit */
   .food .edit{color:var(--faint);padding:4px 5px;display:grid;place-items:center}
@@ -277,6 +277,8 @@
   .tile.icon-only .tic{margin-bottom:2px}
   .tilerow{transition:opacity 0.15s,max-height 0.2s ease;max-height:80px;overflow:hidden}
   .tilerow.hidden-tiles{opacity:0;max-height:0;pointer-events:none;margin:0}
+  .sheet-divider{display:flex;align-items:center;gap:10px;color:var(--faint);font-size:12px;margin:4px 0}
+  .sheet-divider::before,.sheet-divider::after{content:'';flex:1;height:1px;background:var(--line)}
   .sheet-input{transition:opacity 0.15s,max-height 0.25s ease;max-height:200px;overflow:hidden}
   .sheet-input.hidden{opacity:0;max-height:0;pointer-events:none;margin:0;padding:0}
 </style>
@@ -415,6 +417,40 @@ function searchAUFoods(query) {
   <div class="wrap" style="padding-top:8px">
     <div class="pageh"><h2>My Foods</h2><p>Manage saved foods, bulk import, or scan Garmin & RENPHO.</p></div>
 
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:4px"><span class="h3ic"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9z"/><path d="M12 8l3 4H9z"/></svg></span>RENPHO — Weight</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">Upload your weight trend screen — Claude logs today's weight.</p>
+      <label class="uploadzone" id="renphoZone">
+        <span class="ic"><svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg></span>Tap to upload RENPHO screenshot
+        <input type="file" accept="image/*" id="renphoFile">
+      </label>
+      <div id="renphoResult"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:4px"><span class="h3ic"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>Garmin — TDEE</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">Upload the "Calories Burned" screen (7d view works best — it reads Avg Total).</p>
+      <label class="uploadzone" id="garminZone">
+        <span class="ic"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Tap to upload Garmin screenshot
+        <input type="file" accept="image/*" id="garminFile">
+      </label>
+      <div id="garminResult"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:4px">
+        <span class="h3ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Bulk import (CSV)
+      </h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">
+        Upload any CSV — Open Food Facts, MyFitnessPal exports, or your own spreadsheet. Auto-detects columns.
+      </p>
+      <label class="uploadzone" id="csvZone">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>Tap to upload CSV file
+        <input type="file" accept=".csv,text/csv" id="csvFile">
+      </label>
+      <div id="csvResult"></div>
+    </div>
+
     <!-- My Foods management -->
     <div class="card" id="myFoodsCard">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -443,40 +479,6 @@ function searchAUFoods(query) {
         <button class="addbtn" id="mfeSave" style="flex:1">Save changes</button>
         <button class="addbtn" id="mfeCancel" style="flex:0 0 auto;background:var(--surface2);color:var(--text);width:auto;padding:14px 16px">Cancel</button>
       </div>
-    </div>
-
-    <div class="card">
-      <h3 style="font-size:15px;font-weight:700;margin-bottom:4px">
-        <span class="h3ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Bulk import (CSV)
-      </h3>
-      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">
-        Upload any CSV — Open Food Facts, MyFitnessPal exports, or your own spreadsheet. Auto-detects columns.
-      </p>
-      <label class="uploadzone" id="csvZone">
-        <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>Tap to upload CSV file
-        <input type="file" accept=".csv,text/csv" id="csvFile">
-      </label>
-      <div id="csvResult"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="font-size:15px;font-weight:700;margin-bottom:4px"><span class="h3ic"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>Garmin — TDEE</h3>
-      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">Upload the "Calories Burned" screen (7d view works best — it reads Avg Total).</p>
-      <label class="uploadzone" id="garminZone">
-        <span class="ic"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>Tap to upload Garmin screenshot
-        <input type="file" accept="image/*" id="garminFile">
-      </label>
-      <div id="garminResult"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="font-size:15px;font-weight:700;margin-bottom:4px"><span class="h3ic"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9z"/><path d="M12 8l3 4H9z"/></svg></span>RENPHO — Weight</h3>
-      <p style="color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.5">Upload your weight trend screen — Claude logs today's weight.</p>
-      <label class="uploadzone" id="renphoZone">
-        <span class="ic"><svg viewBox="0 0 24 24"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg></span>Tap to upload RENPHO screenshot
-        <input type="file" accept="image/*" id="renphoFile">
-      </label>
-      <div id="renphoResult"></div>
     </div>
   </div>
 </section>
@@ -507,7 +509,6 @@ function searchAUFoods(query) {
       <button class="btn" id="saveSettings">Save settings</button>
     </div>
 
-    <!-- Collapsible Supabase + API card -->
     <div class="card">
       <div class="collapsible-header" id="sbToggle">
         <h3>Cloud sync & API</h3>
@@ -574,9 +575,16 @@ function searchAUFoods(query) {
       <button class="mealtab" data-meal="Snack">🍎 Snack</button>
     </div>
 
-    <div style="flex:1"></div>
+    <div class="sheet-input" id="searchBar" style="margin-top:16px">
+      <input type="text" id="foodInput" placeholder="Search food or describe a meal…" enterkeyhint="search">
+      <div class="search-hint" id="searchHint">Try: "Rokeby choc 425ml" · "200g white rice cooked" · "2 scrambled eggs"</div>
+    </div>
+    <div id="foodMatches" class="foodMatches hidden"></div>
+    <button class="addbtn" id="addBtn" style="margin-bottom:14px"><svg class="svi" viewBox="0 0 24 24" style="margin-right:6px"><path d="M5 3l14 9-14 9V3z"/></svg>Estimate</button>
 
-    <div class="tilerow" id="tileRow">
+    <div class="sheet-divider">or</div>
+
+    <div class="tilerow" id="tileRow" style="margin-top:12px">
       <button class="tile icon-only" id="smartCameraBtn" title="Camera">
         <span class="tic"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
         Camera
@@ -584,10 +592,6 @@ function searchAUFoods(query) {
       <button class="tile icon-only" id="quickTile" title="Quick add">
         <span class="tic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
         Quick add
-      </button>
-      <button class="tile icon-only" id="searchTile" title="Search food">
-        <span class="tic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-        Search
       </button>
       <button class="tile icon-only" id="favTile" title="Favourites">
         <span class="tic"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
@@ -616,18 +620,8 @@ function searchAUFoods(query) {
   </div>
 </div>
 
-<!-- FULL PAGE: search -->
-<div class="fullpage hidden" id="fp-search">
-  <div class="fp-head"><button class="fp-back" data-fpback="1"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><h3>Search food</h3></div>
-  <div class="fp-body">
-    <div class="sheet-input" id="searchBar">
-      <input type="text" id="foodInput" placeholder="Search food or describe a meal…" enterkeyhint="search" autofocus>
-      <div class="search-hint" id="searchHint">Try: "Rokeby choc 425ml" · "200g white rice cooked" · "2 scrambled eggs"</div>
-    </div>
-    <div id="foodMatches" class="foodMatches hidden"></div>
-    <button class="addbtn" id="addBtn" style="margin-top:8px"><svg class="svi" viewBox="0 0 24 24" style="margin-right:6px"><path d="M5 3l14 9-14 9V3z"/></svg>Estimate</button>
-  </div>
-</div>
+<!-- FULL PAGE: search (retired - search is now inline in the Add sheet) -->
+<div class="fullpage hidden" id="fp-search"></div>
 
 <!-- FULL PAGE: quick add -->
 <div class="fullpage hidden" id="fp-quick">
@@ -1597,6 +1591,7 @@ function fillSettings(){
     statusEl.textContent='✓ Connected as "'+S.sbUsername+'"';
     badge.textContent='✓ '+S.sbUsername;
     badge.classList.remove('disconnected');
+    if(!body.classList.contains('open')){chevron.style.transform='';}
   } else {
     statusEl.textContent='';
     badge.textContent='Not connected';
@@ -1611,16 +1606,6 @@ document.getElementById('sbToggle').addEventListener('click',()=>{
   const open=body.classList.toggle('open');
   chevron.style.transform=open?'rotate(180deg)':'';
 });
-
-
-
-
-
-
-
-
-
-
 document.getElementById('sbConnect').onclick=async()=>{
   const url=document.getElementById('sbUrl').value.trim();
   const key=document.getElementById('sbKey').value.trim();
@@ -1749,12 +1734,6 @@ function closeFPs(){
 }
 document.querySelectorAll('[data-fpback]').forEach(b=>b.onclick=()=>closeFPs());
 
-document.getElementById('searchTile').onclick=()=>{
-  openFP('fp-search');
-  const inp = document.getElementById('foodInput');
-  inp.focus();
-  inp.click();
-};
 document.getElementById('favTile').onclick=()=>{
   const fs=document.getElementById('favSearch');
   if(fs) fs.value='';
