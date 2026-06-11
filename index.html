@@ -274,8 +274,6 @@
   .sheet-input.hidden{opacity:0;max-height:0;pointer-events:none;margin:0;padding:0}
 </style>
 
-PLACEHOLDER
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 <script>
 /* ---- Australian Products Database (45,169 branded AU products, gzip+b64) ---- */
@@ -1682,7 +1680,14 @@ function closeSheet(){
   lastSearchQuery='';
   _servItem=null;
 }
-document.getElementById('fabBtn').onclick=openSheet;
+document.getElementById('fabBtn').onclick=()=>{
+  openSheet();
+  openFP('fp-search');
+  setTimeout(()=>{
+    const inp=document.getElementById('foodInput');
+    if(inp){inp.focus();inp.click();}
+  },50);
+};
 document.getElementById('sheetX').onclick=closeSheet;
 document.getElementById('sheetBg').onclick=closeSheet;
 document.getElementById('quickTile').onclick=()=>{
