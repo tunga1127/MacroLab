@@ -105,11 +105,11 @@
   .iconbtn{width:44px;height:44px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;flex-shrink:0;font-size:19px}
   .iconbtn:active{transform:scale(.92)}
 
-  /* add pop-up sheet — floats above nav */
+  /* add sheet — full screen */
   .sheet{position:fixed;inset:0;z-index:80}
   .sheet.hidden{display:none}
-  .sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);animation:fade .2s ease}
-  .sheet-card{position:absolute;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;background:var(--surface);border-radius:24px;border:1px solid var(--line);padding:10px 18px 20px;animation:slideup .26s cubic-bezier(.2,.9,.3,1)}
+  .sheet-bg{display:none}
+  .sheet-card{position:absolute;inset:0;max-width:520px;margin:0 auto;background:var(--surface);padding:max(20px,env(safe-area-inset-top)) 18px max(24px,env(safe-area-inset-bottom));animation:slideup .26s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column;overflow-y:auto}
   /* full-screen pages for add actions */
   .fullpage{position:fixed;inset:0;z-index:140;background:var(--bg);display:flex;flex-direction:column;animation:slidein .22s cubic-bezier(.2,.9,.3,1)}
   .fullpage.hidden{display:none}
@@ -122,8 +122,8 @@
   @keyframes fade{from{opacity:0}to{opacity:1}}
   @keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
   .sheet-grab{width:38px;height:4px;border-radius:99px;background:var(--line);margin:4px auto 14px}
-  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-  .sheet-head h3{font-size:20px;font-weight:800}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .sheet-head h3{font-size:24px;font-weight:800}
   .sheet-x{width:32px;height:32px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;color:var(--muted)}
   .sheet-x svg{width:15px;height:15px;stroke:currentColor;stroke-width:2;stroke-linecap:round}
   .sheet-input{display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
@@ -134,7 +134,7 @@
   .foodMatch:last-child{border-bottom:none}
   .foodMatch:active{background:var(--line)}
   /* meal tabs */
-  .mealtabs{display:flex;gap:6px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .mealtabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .mealtabs::-webkit-scrollbar{display:none}
   .mealtab{padding:7px 14px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;flex-shrink:0}
   .mealtab.on{background:var(--teal);border-color:var(--teal);color:#06201d}
@@ -178,7 +178,7 @@
   .servmacro.pro .sv{color:var(--pro)}
   .servmacro.fat .sv{color:var(--fat)}
   .servmacro.carb .sv{color:var(--carb)}
-  .tilerow{display:flex;gap:10px;margin-bottom:4px}
+  .tilerow{display:flex;gap:10px;margin-bottom:0}
   .tile{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12px;color:var(--text);cursor:pointer;position:relative;overflow:hidden}
   .tile:active{transform:scale(.96)}
   .tile.on{border-color:var(--chrome)}
@@ -266,8 +266,8 @@
   .editrow .erbtns button{flex:1;padding:9px;border-radius:10px;font-size:13px;font-weight:600}
   .editrow .erbtns .sv{background:var(--teal);color:#06201d}
   .editrow .erbtns .cx{background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
-  .tile.icon-only{padding:10px 4px;min-width:0;flex:1;font-size:0}
-  .tile.icon-only .tic{margin-bottom:0}
+  .tile.icon-only{padding:14px 6px;min-width:0;flex:1;font-size:11px;font-weight:600;color:var(--muted)}
+  .tile.icon-only .tic{margin-bottom:2px}
   .tilerow{transition:opacity 0.15s,max-height 0.2s ease;max-height:80px;overflow:hidden}
   .tilerow.hidden-tiles{opacity:0;max-height:0;pointer-events:none;margin:0}
   .sheet-input{transition:opacity 0.15s,max-height 0.25s ease;max-height:200px;overflow:hidden}
@@ -558,7 +558,6 @@ function searchAUFoods(query) {
 <div id="sheet" class="sheet hidden">
   <div class="sheet-bg" id="sheetBg"></div>
   <div class="sheet-card">
-    <div class="sheet-grab"></div>
     <div class="sheet-head"><h3>Add</h3><button class="sheet-x" id="sheetX" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg></button></div>
 
     <div class="mealtabs" id="mealTabs">
@@ -568,25 +567,31 @@ function searchAUFoods(query) {
       <button class="mealtab" data-meal="Snack">🍎 Snack</button>
     </div>
 
+    <div style="flex:1"></div>
+
     <div class="tilerow" id="tileRow">
       <button class="tile icon-only" id="smartCameraBtn" title="Camera">
         <span class="tic"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+        Camera
       </button>
       <button class="tile icon-only" id="quickTile" title="Quick add">
         <span class="tic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        Quick add
       </button>
       <button class="tile icon-only" id="searchTile" title="Search food">
         <span class="tic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        Search
       </button>
       <button class="tile icon-only" id="favTile" title="Favourites">
         <span class="tic"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>
+        Favourites
       </button>
     </div>
   </div>
 </div>
 
 <!-- camera mode picker -->
-<div id="cameraPickerOverlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6)">
+<div id="cameraPickerOverlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6)" onclick="if(event.target===this)document.getElementById('cameraPickerOverlay').style.display='none'">
   <div style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;padding:20px 16px 36px">
     <div style="width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 20px"></div>
     <div style="font-size:16px;font-weight:700;margin-bottom:16px;text-align:center">What are you photographing?</div>
@@ -636,8 +641,8 @@ function searchAUFoods(query) {
 <div class="fullpage hidden" id="fp-favs">
   <div class="fp-head"><button class="fp-back" data-fpback="1"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button><h3>Favourites</h3></div>
   <div class="fp-body">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Tap a favourite to choose a serving</div>
-    <div id="favList"><div class="empty" style="font-size:12px">No favourites yet.<br>Add food then tap ★ to save it.</div></div>
+    <input type="text" id="favSearch" placeholder="Search favourites…" oninput="renderFavs()" style="margin-bottom:12px;background:var(--surface2);border:1px solid var(--line)">
+    <div id="favList"><div class="empty" style="font-size:12px">No favourites yet.<br>Tap ★ on any logged food to save it.</div></div>
   </div>
 </div>
 
@@ -1196,7 +1201,7 @@ function initMealTabs(){
     };
   });
   const h=new Date().getHours();
-  const auto=h<10?'Breakfast':h<14?'Lunch':h<18?'Dinner':'Snack';
+  const auto=h<11?'Breakfast':h<15?'Lunch':h<17?'Snack':h<21?'Dinner':'Snack';
   currentMeal=auto;
   document.querySelectorAll('.mealtab').forEach(b=>{
     b.classList.toggle('on',b.dataset.meal===auto);
@@ -1218,8 +1223,11 @@ function removeFav(name){
 }
 function renderFavs(){
   const list=document.getElementById('favList');
-  const favs=getFavs();
-  if(!favs.length){list.innerHTML='<div class="empty" style="font-size:12px">No favourites yet.<br>Tap ★ on any logged food to save it.</div>';return;}
+  const q=(document.getElementById('favSearch')?.value||'').toLowerCase().trim();
+  let favs=getFavs();
+  if(q) favs=favs.filter(f=>f.name.toLowerCase().includes(q));
+  if(!getFavs().length){list.innerHTML='<div class="empty" style="font-size:12px">No favourites yet.<br>Tap ★ on any logged food to save it.</div>';return;}
+  if(!favs.length){list.innerHTML='<div class="empty" style="font-size:12px">No results for "'+esc(q)+'"</div>';return;}
   list.innerHTML='';
   favs.forEach(item=>{
     const el=document.createElement('div');
@@ -1710,6 +1718,8 @@ document.getElementById('searchTile').onclick=()=>{
   inp.click();
 };
 document.getElementById('favTile').onclick=()=>{
+  const fs=document.getElementById('favSearch');
+  if(fs) fs.value='';
   renderFavs();
   openFP('fp-favs');
 };
